@@ -12,13 +12,12 @@ const Connections = () => {
     fetchConnections();
   }, []);
   const fetchConnections = async () => {
-    if(connections) return;
     try {
       const res = await axios.get(BASE_URL + "/user/connections", {
         withCredentials: true,
       });
       dispatch(addConnections(res.data));
-    } catch (error) {""}
+    } catch (error) {error}
   };
   if (!connections) return;
   if (connections.length == 0) return <div className="text-3xl font-mono pt-2 flex justify-center"><p>No Connection !</p></div>;

@@ -22,7 +22,7 @@ const Body = () => {
       dispatch(addUser(res.data));
     } catch (err) {
       navigate("/login");
-      err;
+      err
     }
   }
 

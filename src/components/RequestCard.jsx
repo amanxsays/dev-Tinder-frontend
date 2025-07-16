@@ -24,7 +24,7 @@ const RequestCard = ({ user, time }) => {
       toast.success(review.data);
       dispatch(removeRequest(_id));
     } catch (error) {
-      ("");
+      error;
     }
   };
   const { photoUrl, firstName, lastName, gender, about, skills, age } = user;
