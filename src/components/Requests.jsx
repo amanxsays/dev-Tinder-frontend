@@ -6,8 +6,8 @@ import { BASE_URL } from '../utils/constants'
 import RequestCard from './RequestCard';
 
 const Requests = () => {
-  const dispatch = useDispatch();
   const requests = useSelector((store) => store.request);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     fetchRequests();
@@ -20,7 +20,7 @@ const Requests = () => {
         withCredentials: true,
       });
       dispatch(addRequests(res.data));
-    } catch (error) {""
+    } catch (error) {error
     }
   };
   if (requests==null) return;
@@ -29,7 +29,7 @@ const Requests = () => {
     <div>
       <div className="text-3xl font-mono pt-2 flex justify-center"><p>Requests</p></div>
       {requests.map((user) => (
-        <RequestCard user={user.fromUserId} />
+        <RequestCard user={user.fromUserId} time={user.updatedAt} />
       ))}
     </div>
   );
