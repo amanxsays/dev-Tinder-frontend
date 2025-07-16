@@ -1,5 +1,5 @@
 const ConnectionCard = ({ user }) => {
-  const { photoUrl, firstName, lastName, gender } = user;
+  const { photoUrl, firstName, lastName, gender ,age } = user;
   return (
     <div className="flex justify-center pt-4">
       <div className="flex rounded-md bg-[#111] w-6/12 h-20 shadow-sm">
@@ -7,7 +7,7 @@ const ConnectionCard = ({ user }) => {
           <div className="flex px-5 my-1 w-11/12 justify-between">
           <div>
             <p className="text-lg font-semibold">{firstName + " " + lastName}</p>
-            <p className="text-sm text-gray-400">{gender}</p>
+            <p className="text-sm text-gray-400">{age} {gender}</p>
           </div>
           <button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] hover:from-[#0818cbd8] transition-colors duration-500 w-20 my-auto">Chat</button>
         </div>

@@ -20,8 +20,7 @@ const Feed = () => {
         withCredentials: true,
       });
       dispatch(addFeed(feedUsers.data));
-    } catch (error) {
-      console.error(error.message);
+    } catch (error) {""
     }
   };
 

@@ -7,10 +7,13 @@ import { toast } from "react-toastify";
 import { removeFeed } from "../utils/feedSlice";
 import { IoNotifications } from "react-icons/io5";
 import { HiMiniUserGroup } from "react-icons/hi2";
+import { removeConnections } from "../utils/connectionsSlice"
+import { removeAllRequests } from "../utils/requestsSlice"
 
 const NavBar = () => {
   const dispatch = useDispatch();
   const selector = useSelector((store) => store.user);
+  const requests = useSelector((store) => store.request);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -18,6 +21,8 @@ const NavBar = () => {
       await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
       dispatch(removeUser());
       dispatch(removeFeed());
+      dispatch(removeConnections());
+      dispatch(removeAllRequests());
       navigate("/login");
       toast.success("Logged out successfully.");
     } catch (err) {
@@ -41,10 +46,10 @@ const NavBar = () => {
         <div className="flex gap-2">
           <div className="flex cursor-pointer" onClick={()=>navigate('/requests')}>
             <IoNotifications className="scale-150 mt-3 mr-1 " />
-            <span className="relative flex size-2">
+            {requests &&  requests.length>0 && <span className="relative flex size-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
               <span className="relative inline-flex size-2 rounded-full bg-sky-500"></span>
-            </span>
+            </span>}
           </div>
           <HiMiniUserGroup className="scale-175 mt-2.5 mx-3 cursor-pointer" onClick={()=>navigate('/connections')}/>
           <input
@@ -58,7 +63,7 @@ const NavBar = () => {
               role="button"
               className="btn btn-ghost btn-circle avatar"
             >
-              <div className="w-10 rounded-full">
+              <div className="w-10 rounded-md">
                 <img
                   alt="Tailwind CSS Navbar component"
                   src={
