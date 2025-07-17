@@ -8,12 +8,12 @@ import UserCard from "./UserCard";
 
 const ProfileEdit = ({ user }) => {
   const dispatch = useDispatch();
-  const [firstName, setFirstName] = useState(user.firstName);
-  const [lastName, setLastName] = useState(user.lastName);
-  const [age, setAge] = useState(user.age);
-  const [gender, setGender] = useState(user.gender);
+  const [firstName, setFirstName] = useState(user.firstName || "");
+  const [lastName, setLastName] = useState(user.lastName || "");
+  const [age, setAge] = useState(user.age || "");
+  const [gender, setGender] = useState(user.gender || "");
   const [skills, setSkills] = useState(user.skills);
-  const [about, setAbout] = useState(user.about);
+  const [about, setAbout] = useState(user.about || "");
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
 
   const handleUpdate = async () => {
