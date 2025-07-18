@@ -11,6 +11,7 @@ import { MdDriveFileRenameOutline } from "react-icons/md";
 const Login = () => {
   const [showPass, setShowPass] = useState(false);
   const [isSignUpPage, setIsSignUpPage] = useState(false);
+  const [otpInput,setOtpInput]= useState(false);
   const dispatch=useDispatch();
   const navigate=useNavigate();
 
@@ -18,6 +19,7 @@ const Login = () => {
   const lastName = useRef("");
   const emailId = useRef("");
   const password = useRef("");
+  const otp = useRef("");
   const handleLogin = async () => {
     try {
       const res = await axios.post(
@@ -32,7 +34,7 @@ const Login = () => {
       toast.success(res.data.message);
       navigate("/")
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.response.data)
     }
   };
   const handleSignUp= async () => {
@@ -44,17 +46,35 @@ const Login = () => {
           lastName: lastName.current.value,
           emailId: emailId.current.value,
           password: password.current.value,
+          otp: otp.current.value,
         },
         { withCredentials: true }
       )
-      console.log(res.data.data);
       dispatch(addUser(res.data.data))
       toast.success(res.data.message);
       navigate("/profile")
     } catch (err) {
-      toast.error(err.message)
-    }
-      
+      toast.error(err.response.data)
+    } 
+  }
+  const handleOtp= async ()=>{
+    try {
+    const res = await axios.post(
+        BASE_URL+"/otp",
+        {
+          firstName: firstName.current.value,
+          lastName: lastName.current.value,
+          emailId: emailId.current.value,
+          password: password.current.value,
+        },
+        { withCredentials: true }
+      )
+      setOtpInput(true);
+      toast.success(res.data);
+    } catch (err) {
+      if(err.status==402) setOtpInput(true);
+      toast.error(err.response.data)
+    } 
   }
 
   return (
@@ -160,13 +180,38 @@ const Login = () => {
               </div>
             </fieldset>
           </div>
+          <div className={otpInput?"":"hidden"}>
+            <fieldset className="fieldset">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                />
+              </svg>
+              <input
+                ref={otp}
+                type="text"
+                className="input"
+                placeholder="otp"
+              />
+            </fieldset>
+          </div>
           <div className="flex justify-center card-actions">
             <button
               className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] mt-8 mb-2 w-full hover:from-[#0818cbd8] transition-colors duration-500"
-              onClick={isSignUpPage?handleSignUp:handleLogin}
+              onClick={isSignUpPage?(otpInput?handleSignUp:handleOtp):handleLogin}
             >
-              {isSignUpPage?"Sign Up":"Login"}
+              {isSignUpPage?(otpInput?"Verify & Sign Up":"Send Otp"):"Login"}
             </button>
+
             <button onClick={()=>setIsSignUpPage(!isSignUpPage)} className="cursor-pointer flex gap-1">{!isSignUpPage?(<>New user ? <p className="text-blue-400">Sign Up</p> now</>):(<>Already registered ? <p className="text-blue-400">Login</p> now</>)}</button>
           </div>
         </form>
