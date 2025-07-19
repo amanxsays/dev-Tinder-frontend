@@ -6,12 +6,15 @@ import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants"
 import { MdDriveFileRenameOutline } from "react-icons/md";
+import CountdownTimer from "./OtpCoundown";
 
 
 const Login = () => {
   const [showPass, setShowPass] = useState(false);
   const [isSignUpPage, setIsSignUpPage] = useState(false);
   const [otpInput,setOtpInput]= useState(false);
+  const [startTime,setStartTime] = useState(null);
+
   const dispatch=useDispatch();
   const navigate=useNavigate();
 
@@ -69,13 +72,18 @@ const Login = () => {
         },
         { withCredentials: true }
       )
+      setStartTime(Date.now());
       setOtpInput(true);
-      toast.success(res.data);
+      console.log(res);
+      toast.success(res.data.message);
     } catch (err) {
       if(err.status==402) setOtpInput(true);
-      toast.error(err.response.data)
+      console.log(err);
+      toast.error(err.response.data.message || err.response.data)
     } 
   }
+
+  
 
   return (
     <div>
@@ -202,6 +210,7 @@ const Login = () => {
                 className="input"
                 placeholder="otp"
               />
+              {startTime && <CountdownTimer startTime={startTime} />}
             </fieldset>
           </div>
           <div className="flex justify-center card-actions">
