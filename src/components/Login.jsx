@@ -75,11 +75,9 @@ const Login = () => {
       )
       setStartTime(Date.now());
       setOtpInput(true);
-      console.log(res);
       toast.success(res.data.message);
     } catch (err) {
       if(err.status==402) setOtpInput(true);
-      console.log(err);
       toast.error(err.response.data.message || err.response.data)
     } 
   }
