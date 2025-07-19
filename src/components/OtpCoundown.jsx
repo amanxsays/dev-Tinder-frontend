@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 function CountdownTimer({ startTime }) {
-  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutes in second
+  const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes in second
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - startTime) / 1000);
-      const remaining = 5 * 60 - elapsedSeconds;
+      const remaining = 2 * 60 - elapsedSeconds;
       setTimeLeft(remaining > 0 ? remaining : 0);
     }, 1000);
 
@@ -18,7 +18,7 @@ function CountdownTimer({ startTime }) {
 
   return (
       <p className="flex gap-1">
-        Otp will expire in <div className={`text-[15px] mt-[-2px] font-semibold ${minutes>2 ? 'text-green-500' : 'text-red-500'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</div>
+        Otp will expire in <div className={`text-[15px] mt-[-2px] font-semibold ${minutes>=1 ? 'text-green-500' : 'text-red-500'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</div>
       </p>
   );
 }
