@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const ConnectionCard = ({ user }) => {
   const { photoUrl, firstName, lastName, gender ,age } = user;
   return (
@@ -9,7 +11,7 @@ const ConnectionCard = ({ user }) => {
             <p className="text-lg font-semibold">{firstName + " " + lastName}</p>
             <p className="text-sm text-gray-400">{age} {gender}</p>
           </div>
-          <button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] hover:from-[#0818cbd8] transition-colors duration-500 w-20 my-auto">Chat</button>
+          <Link to={"/chat/"+user._id}><button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] hover:from-[#0818cbd8] transition-colors duration-500 w-20 my-auto">Chat</button></Link>
         </div>
       </div>
     </div>
