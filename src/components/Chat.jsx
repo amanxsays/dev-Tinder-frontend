@@ -2,23 +2,45 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { createSocketConnection } from "../utils/socket";
+import axios from "axios";
+import { BASE_URL } from "../utils/constants";
 
 const Chat = () => {
   const { targetUserId } = useParams();
   const [messages, setMessages] = useState([]);
   const user = useSelector((store) => store.user);
   const userId = user?._id;
-  const photoUrl=user?.photoUrl;
+  const photoUrl = user?.photoUrl;
   const msg = useRef("");
+
+  const fetchChat = async () => {
+    const chat = await axios(BASE_URL + "/chat/" + targetUserId, {
+      withCredentials: true,
+    });
+
+    const chatMessages = chat?.data?.messages.map((msg) => {
+      return {
+        firstName: msg.senderId.firstName,
+        photoUrl: msg.senderId.photoUrl,
+        text: msg.text,
+        time: msg.updatedAt,
+      };
+    });
+    setMessages(chatMessages);
+  };
+
+  useEffect(() => {
+    fetchChat();
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
     const socket = createSocketConnection();
 
     socket.emit("joinChat", { userId, targetUserId });
-    
-    socket.on("messageReceived", ({ firstName, text ,photoUrl}) => {
-      setMessages((messages)=>[...messages, { firstName, text, photoUrl }]);
+
+    socket.on("messageReceived", ({ firstName, text, photoUrl }) => {
+      setMessages((messages) => [...messages, { firstName, text, photoUrl ,time: handleTime(new Date())}]);
     });
 
     return () => {
@@ -33,76 +55,89 @@ const Chat = () => {
       userId,
       targetUserId,
       text: msg.current.value,
-      photoUrl
+      photoUrl,
     });
-    msg.current.value="";
+    msg.current.value = "";
   };
+
+  const handleTime = (time)=>{
+    if (typeof time === "string" && /^\d{2}:\d{2}$/.test(time)) {
+    return time;
+  }
+    const date= new Date(time);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
   return (
     <>
       <div className="bg-black m-10 mt-[11%] rounded-md p-2 min-h-screen">
         <div className="flex flex-col min-h-screen bg-[#11132686] border-1 rounded-md border-gray-700">
-        <div className="bg-base-300 border-1 border-gray-500 p-2 rounded-t-md">
-          <p>Chat</p>
-        </div>
-        <div className="m-1">
-        {messages.map((mess, index) => {
-            return (
-              <div key={index}>
-                {mess.firstName!=user.firstName?<div className="chat chat-start">
-                  <div className="chat-image avatar">
-                    <div className="w-10 rounded-full">
-                      <img
-                        alt="Tailwind CSS chat bubble component"
-                        src={mess.photoUrl}
-                      />
+          <div className="bg-base-300 border-1 border-gray-500 p-2 rounded-t-md">
+            <p>Chat</p>
+          </div>
+          <div className="m-1">
+            {messages.map((mess, index) => {
+              return (
+                <div key={index}>
+                  {mess.firstName != user.firstName ? (
+                    <div className="chat chat-start">
+                      <div className="chat-image avatar">
+                        <div className="w-10 rounded-full">
+                          <img
+                            alt="Tailwind CSS chat bubble component"
+                            src={mess.photoUrl}
+                          />
+                        </div>
+                      </div>
+                      <div className="chat-header">
+                        {mess.firstName}
+                        <time className="text-xs opacity-50">{handleTime(mess.time)}</time>
+                      </div>
+                      <div className="chat-bubble">{mess.text}</div>
                     </div>
-                  </div>
-                  <div className="chat-header">
-                    {mess.firstName}
-                    <time className="text-xs opacity-50">12:45</time>
-                  </div>
-                  <div className="chat-bubble">{mess.text}</div>
-                  <div className="chat-footer opacity-50">Delivered</div>
-                </div>:
-                <div className="chat chat-end">
-                  <div className="chat-image avatar">
-                    <div className="w-10 rounded-full">
-                      <img
-                        alt="Tailwind CSS chat bubble component"
-                        src={mess.photoUrl}
-                      />
+                  ) : (
+                    <div className="chat chat-end">
+                      <div className="chat-image avatar">
+                        <div className="w-10 rounded-full">
+                          <img
+                            alt="Tailwind CSS chat bubble component"
+                            src={mess.photoUrl}
+                          />
+                        </div>
+                      </div>
+                      <div className="chat-header">
+                        {mess.firstName}
+                        <time className="text-xs opacity-50">
+                          {handleTime(mess.time)}
+                        </time>
+                      </div>
+                      <div className="chat-bubble">{mess.text}</div>
                     </div>
-                  </div>
-                  <div className="chat-header">
-                    {mess.firstName}
-                    <time className="text-xs opacity-50">12:46</time>
-                  </div>
-                  <div className="chat-bubble">{mess.text}</div>
-                  <div className="chat-footer opacity-50">Seen at 12:46</div>
-                </div>}
-              </div>
-            );
-          })}
-        </div>
-        <form
-          className="bg-gray-600 flex justify-between rounded-md mt-auto"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-        >
-          <fieldset className="fieldset p-0 m-0 w-screen">
-            <input
-              ref={msg}
-              type="text"
-              className="input w-full"
-              placeholder="Type a message"
-            />
-          </fieldset>
-          <button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] hover:opacity-70- w-20 my-auto rounded-l-none">
-            Send
-          </button>
-        </form>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <form
+            className="bg-gray-600 flex justify-between rounded-md mt-auto"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+          >
+            <fieldset className="fieldset p-0 m-0 w-screen">
+              <input
+                ref={msg}
+                type="text"
+                className="input w-full"
+                placeholder="Type a message"
+              />
+            </fieldset>
+            <button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] hover:opacity-70- w-20 my-auto rounded-l-none">
+              Send
+            </button>
+          </form>
         </div>
       </div>
     </>
