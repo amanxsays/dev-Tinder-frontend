@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve -s dist --listen tcp://0.0.0.0:$PORT"
+    "start": "vite preview --host 0.0.0.0 --port $PORT"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
@@ -21,7 +21,6 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.3",
     "react-toastify": "^11.0.5",
-    "serve": "^14.2.5",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.11"
   },
