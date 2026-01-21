@@ -75,7 +75,9 @@ const Login = () => {
       )
       setStartTime(Date.now());
       setOtpInput(true);
-      toast.success(res.data.message);
+      toast.success(res.data.message, {
+          autoClose: 10000, // 10 seconds
+      });
     } catch (err) {
       if(err.status==402) setOtpInput(true);
       toast.error(err.response.data.message || err.response.data)
