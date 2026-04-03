@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react() , tailwindcss() ],
   preview: {
     allowedHosts: [
-      "https://dev-tinder-backend-lmw0.onrender.com"
+      import.meta.env.VITE_API_URL,
     ],
   },
 })
