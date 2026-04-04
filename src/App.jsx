@@ -3,6 +3,7 @@ import Login from "./components/Login";
 import Feed from "./components/Feed";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Profile from "./components/Profile";
+import ViewProfile from "./components/ViewProfile";
 import { Toast } from "./components/Toast";
 import { Provider } from "react-redux";
 import appStore from "./utils/appStore";
@@ -23,6 +24,7 @@ function App() {
               <Route path="/connections" element={<Connections />} />
               <Route path="/requests" element={<Requests />} />
               <Route path="/chat/:targetUserId" element={<Chat />} />
+              <Route path="/profile/:userId" element={<ViewProfile />} />
             </Route>
           </Routes>
         </BrowserRouter>
