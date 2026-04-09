@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 
 const ConnectionCard = ({ user }) => {
-  const { _id, photoUrl, firstName, lastName, gender, age } = user; 
+  const { _id, photoUrl, firstName, lastName, gender, age } = user;
   
   return (
     <div className="flex justify-center pt-4">
       <div className="flex rounded-md bg-[#111] w-6/12 h-20 shadow-sm">
         <div>
-          <img className="w-20 h-20 rounded-l-md object-cover" src={photoUrl} alt="user" />
+          <Link to={`/profile/${_id}`}><img className="w-20 h-20 rounded-l-md object-cover" src={photoUrl} alt="user"/></Link>
         </div>
         <div className="flex px-5 w-11/12 justify-between items-center">
           <div>

@@ -18,7 +18,9 @@ function CountdownTimer({ startTime }) {
 
   return (
       <p className="flex gap-1">
-        Otp will expire in <div className={`text-[15px] mt-[-2px] font-semibold ${minutes>=1 ? 'text-green-500' : 'text-red-500'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</div>
+        <span className="text-[15px] mt-[-2px] font-semibold text-green-500">
+          Otp will expire in <div className={`text-[15px] mt-[-2px] font-semibold ${minutes>=1 ? 'text-green-500' : 'text-red-500'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</div>
+        </span>
       </p>
   );
 }

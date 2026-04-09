@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { removeRequest } from "../utils/requestsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const RequestCard = ({ user, time }) => {
 
@@ -32,7 +33,7 @@ const RequestCard = ({ user, time }) => {
     <div className="flex justify-center pt-4">
       <div className="flex rounded-md bg-[#111] w-6/12 h-30 shadow-sm overflow-auto">
         <div>
-          <img className="w-30 h-30 rounded-l-md" src={photoUrl} alt="user" />
+          <Link to={`/profile/${user._id}`}><img className="w-30 h-30 rounded-l-md" src={photoUrl} alt="user" /></Link>
         </div>
         <div className="flex px-5 my-1 w-11/12 justify-between">
           <div>
