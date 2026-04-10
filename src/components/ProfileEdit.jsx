@@ -34,7 +34,7 @@ const ProfileEdit = ({ user }) => {
 
   return (
     <div className="flex justify-center gap-10">
-      <div><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl} } /></div>
+      <div><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, integrations: user?.integrations} } /></div>
       <div className="card w-96 bg-[#0f0f10] card-lg shadow-sm">
         <form className="card-body" onSubmit={(e) =>{
           e.preventDefault();

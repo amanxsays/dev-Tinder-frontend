@@ -32,6 +32,9 @@ const UserCard = ({ user }) => {
   const isProfilePage = location.pathname.includes('/profile');
   const [showGithubDrawer, setShowGithubDrawer] = useState(false);
   const [showCfDrawer, setShowCfDrawer] = useState(false);
+  const [liveStats, setLiveStats] = useState(integrations || {});
+  const [isSyncingGithub, setIsSyncingGithub] = useState(false);
+  const [isSyncingCf, setIsSyncingCf] = useState(false);
 
   const controls = useAnimation();
   const x = useMotionValue(0);
@@ -63,6 +66,43 @@ const UserCard = ({ user }) => {
     } else {
       controls.start({ x: 0, opacity: 1, transition: { type: "spring", stiffness: 500, damping: 30 } });
     }
+  };
+
+
+  const triggerBackgroundSync = async (platform, handle) => {
+    if (!handle) return;
+    const isGithub = platform === 'github';
+    if (isGithub) setIsSyncingGithub(true);
+    else setIsSyncingCf(true);
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/stats?${platform}=${handle}&userId=${_id}`
+      );
+      
+      if (response.data && response.data[platform]) {
+        setLiveStats(prev => ({ ...prev, [platform]: response.data[platform] }));
+      }
+    } catch (error) {
+      console.error(`Failed to sync ${platform}:`, error);
+    } finally {
+      if (isGithub) setIsSyncingGithub(false);
+      else setIsSyncingCf(false);
+    }
+  };
+
+  const handleGithubClick = (e) => {
+    e.stopPropagation();
+    const willOpen = !showGithubDrawer;
+    setShowGithubDrawer(willOpen);
+    if (willOpen) triggerBackgroundSync('github', ghHandle);
+  };
+
+  const handleCfClick = (e) => {
+    e.stopPropagation();
+    const willOpen = !showCfDrawer;
+    setShowCfDrawer(willOpen);
+    if (willOpen) triggerBackgroundSync('codeforces', cfHandle);
   };
 
   return (
@@ -99,40 +139,74 @@ const UserCard = ({ user }) => {
             <div className="flex flex-col gap-2 mt-1">
               {ghHandle && (
                 <div className="bg-[#1a1a1a] rounded-md border border-gray-800 overflow-hidden">
-                  <div onClick={(e) => { e.stopPropagation(); setShowGithubDrawer(!showGithubDrawer); }} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
-                    <div className="flex items-center gap-2 text-white text-[11px] font-bold"><FaGithub className="text-blue-500" /><span>Github: @{ghHandle}</span></div>
-                    {showGithubDrawer ? <FaChevronUp className="text-[10px]" /> : <FaChevronDown className="text-[10px]" />}
+                  <div onClick={handleGithubClick} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
+                    <div className="flex items-center gap-2 text-white text-[11px] font-bold">
+                      <FaGithub className="text-blue-500" /><span>Github: @{ghHandle}</span>
+                    </div>
+                    {isSyncingGithub ? (
+                        <span className="loading loading-spinner loading-xs text-blue-500"></span>
+                    ) : (
+                        showGithubDrawer ? <FaChevronUp className="text-[10px]" /> : <FaChevronDown className="text-[10px]" />
+                    )}
                   </div>
-                  {showGithubDrawer && integrations?.github && (
+                  
+                  {showGithubDrawer && (
                     <div className="p-3 bg-[#0a0a0a] border-t border-gray-800">
-                      <div className="flex items-center gap-3 mb-3 border-b border-gray-900 pb-2">
-                        <img src={integrations.github.avatar_url} className="w-10 h-10 rounded-md border border-gray-700 object-cover" alt="gh" />
-                        <div><p className="text-white text-xs font-bold">{integrations.github.name || ghHandle}</p><p className="text-[10px] text-gray-500">{integrations.github.company || "Independent Dev"}</p></div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="bg-[#151515] p-1 rounded"><p className="text-blue-400 font-bold text-sm">{integrations.github.public_repos || 0}</p><p className="text-[8px] uppercase text-gray-500">Repos</p></div>
-                        <div className="bg-[#151515] p-1 rounded"><p className="text-blue-400 font-bold text-sm">{integrations.github.followers || 0}</p><p className="text-[8px] uppercase text-gray-500">Followers</p></div>
-                      </div>
+                      {!liveStats?.github && isSyncingGithub && (
+                          <div className="flex flex-col items-center justify-center py-2">
+                              <span className="loading loading-spinner text-blue-500 mb-2"></span>
+                              <p className="text-[10px] text-gray-400">Fetching live stats...</p>
+                          </div>
+                      )}
+                      {liveStats?.github && (
+                        <div className={`transition-opacity duration-500 ${isSyncingGithub ? 'opacity-50' : 'opacity-100'}`}>
+                          <div className="flex items-center gap-3 mb-3 border-b border-gray-900 pb-2">
+                            <img src={liveStats.github.avatar_url || liveStats.github.avatarUrl} className="w-10 h-10 rounded-md border border-gray-700 object-cover" alt="gh" />
+                            <div><p className="text-white text-xs font-bold">{liveStats.github.name || ghHandle}</p><p className="text-[10px] text-gray-500">{liveStats.github.company || "Independent Dev"}</p></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-center">
+                            <div className="bg-[#151515] p-1 rounded"><p className="text-blue-400 font-bold text-sm">{liveStats.github.public_repos || liveStats.github.publicRepos || 0}</p><p className="text-[8px] uppercase text-gray-500">Repos</p></div>
+                            <div className="bg-[#151515] p-1 rounded"><p className="text-blue-400 font-bold text-sm">{liveStats.github.followers || 0}</p><p className="text-[8px] uppercase text-gray-500">Followers</p></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
               {cfHandle && (
                 <div className="bg-[#1a1a1a] rounded-md border border-gray-800 overflow-hidden">
-                  <div onClick={(e) => { e.stopPropagation(); setShowCfDrawer(!showCfDrawer); }} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
-                    <div className="flex items-center gap-2 text-white text-[11px] font-bold"><FaTrophy className="text-yellow-500" /><span>Codeforces: {cfHandle}</span></div>
-                    {showCfDrawer ? <FaChevronUp className="text-[10px]" /> : <FaChevronDown className="text-[10px]" />}
+                  <div onClick={handleCfClick} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
+                    <div className="flex items-center gap-2 text-white text-[11px] font-bold">
+                      <FaTrophy className="text-yellow-500" /><span>Codeforces: {cfHandle}</span>
+                    </div>
+                    {isSyncingCf ? (
+                        <span className="loading loading-spinner loading-xs text-yellow-500"></span>
+                    ) : (
+                        showCfDrawer ? <FaChevronUp className="text-[10px]" /> : <FaChevronDown className="text-[10px]" />
+                    )}
                   </div>
-                  {showCfDrawer && integrations?.codeforces && (
+                  
+                  {showCfDrawer && (
                     <div className="p-3 bg-[#0a0a0a] border-t border-gray-800">
-                      <div className="flex items-center gap-3 mb-3 border-b border-gray-900 pb-2">
-                        <img src={integrations.codeforces.titlePhoto} className="w-10 h-10 rounded-md border border-gray-700 object-cover" alt="cf" />
-                        <div><p className={`${getCfColor(integrations.codeforces.rank)} text-xs font-bold capitalize`}>{integrations.codeforces.rank || "Unrated"}</p><p className="text-[10px] text-gray-500">Rating: {integrations.codeforces.rating || 0}</p></div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(integrations.codeforces.rank)} font-bold text-sm`}>{integrations.codeforces.rank || "N/A"}</p><p className="text-[8px] uppercase text-gray-500">Rank</p></div>
-                        <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(integrations.codeforces.rank)} font-bold text-sm`}>{integrations.codeforces.rating || 0}</p><p className="text-[8px] uppercase text-gray-500">Rating</p></div>
-                      </div>
+                      {!liveStats?.codeforces && isSyncingCf && (
+                          <div className="flex flex-col items-center justify-center py-2">
+                              <span className="loading loading-spinner text-yellow-500 mb-2"></span>
+                              <p className="text-[10px] text-gray-400">Fetching live stats...</p>
+                          </div>
+                      )}
+                      {liveStats?.codeforces && (
+                        <div className={`transition-opacity duration-500 ${isSyncingCf ? 'opacity-50' : 'opacity-100'}`}>
+                          <div className="flex items-center gap-3 mb-3 border-b border-gray-900 pb-2">
+                            <img src={liveStats.codeforces.titlePhoto} className="w-10 h-10 rounded-md border border-gray-700 object-cover" alt="cf" />
+                            <div><p className={`${getCfColor(liveStats.codeforces.rank)} text-xs font-bold capitalize`}>{liveStats.codeforces.rank || "Unrated"}</p><p className="text-[10px] text-gray-500">Rating: {liveStats.codeforces.rating || 0}</p></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-center">
+                            <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(liveStats.codeforces.rank)} font-bold text-sm`}>{liveStats.codeforces.rank || "N/A"}</p><p className="text-[8px] uppercase text-gray-500">Rank</p></div>
+                            <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(liveStats.codeforces.rank)} font-bold text-sm`}>{liveStats.codeforces.rating || 0}</p><p className="text-[8px] uppercase text-gray-500">Rating</p></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
