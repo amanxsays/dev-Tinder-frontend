@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-function CountdownTimer({ startTime }) {
+function CountdownTimer({ startTime , onResend}) {
   const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes in second
   useEffect(() => {
     const interval = setInterval(() => {
@@ -15,6 +15,21 @@ function CountdownTimer({ startTime }) {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
+
+  if (timeLeft <= 0) {
+    return (
+      <div className="flex gap-1 text-[13px] mt-1 text-gray-400">
+        Didn't receive the code? 
+        <button 
+          type="button" // VERY IMPORTANT: Prevents the form from submitting
+          onClick={onResend} 
+          className="text-blue-500 font-bold hover:underline cursor-pointer"
+        >
+          Resend OTP
+        </button>
+      </div>
+    );
+  }
 
   return (
       <p className="flex gap-1">

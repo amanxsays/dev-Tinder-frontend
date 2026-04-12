@@ -79,7 +79,8 @@ const Login = () => {
           autoClose: 10000, // 10 seconds
       });
     } catch (err) {
-      if(err.status==402) setOtpInput(true);
+      setStartTime(0); 
+      setOtpInput(true);
       toast.error(err.response.data.message || err.response.data)
     } 
   }
@@ -198,7 +199,7 @@ const Login = () => {
                 className="input"
                 placeholder="otp"
               />
-              {startTime && <CountdownTimer startTime={startTime} />}
+              {startTime!==null && <CountdownTimer startTime={startTime} onResend={handleOtp}/>}
             </fieldset>
           </div>
           <div className="flex justify-center card-actions">
