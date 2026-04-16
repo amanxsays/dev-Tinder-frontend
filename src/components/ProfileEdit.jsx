@@ -17,12 +17,13 @@ const ProfileEdit = ({ user }) => {
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
   const [githubHandle, setGithubHandle] = useState(user?.githubHandle || "");
   const [codeforcesHandle, setCodeforcesHandle] = useState(user?.codeforcesHandle || "");
+  const [leetcodeHandle, setLeetcodeHandle] = useState(user?.leetcodeHandle || "");
 
   const handleUpdate = async () => {
     try {
       const res = await axios.patch(
         BASE_URL + "/profile/edit",
-        { firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle },
+        { firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle },
         { withCredentials: true }
       );
       dispatch(addUser(res.data.data));
@@ -34,7 +35,7 @@ const ProfileEdit = ({ user }) => {
 
   return (
     <div className="flex justify-center gap-10">
-      <div><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, integrations: user?.integrations} } /></div>
+      <div><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle, integrations: user?.integrations} } /></div>
       <div className="card w-96 bg-[#0f0f10] card-lg shadow-sm">
         <form className="card-body" onSubmit={(e) =>{
           e.preventDefault();
@@ -127,6 +128,16 @@ const ProfileEdit = ({ user }) => {
                 placeholder="e.g. tourist"
                 value={codeforcesHandle}
                 onChange={(e) => setCodeforcesHandle(e.target.value)}
+              />
+            </fieldset>
+            <fieldset className="fieldset">
+              <p>Leetcode Handle</p>
+              <input
+                type="text"
+                className="input"
+                placeholder="e.g. amanxsays"
+                value={leetcodeHandle}
+                onChange={(e) => setLeetcodeHandle(e.target.value)}
               />
             </fieldset>
           </div>

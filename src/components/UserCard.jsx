@@ -5,6 +5,7 @@ import { BASE_URL } from "../utils/constants";
 import { toast } from "react-toastify";
 import { removeCard } from "../utils/feedSlice";
 import { FaGithub, FaTrophy, FaExternalLinkAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { SiLeetcode ,SiCodeforces } from "react-icons/si";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useAnimation, useMotionValue, useTransform } from "framer-motion";
 
@@ -22,9 +23,10 @@ const getCfColor = (rank) => {
 };
 
 const UserCard = ({ user }) => {
-  const { _id, firstName, lastName, age, gender, skills, about, photoUrl, githubHandle, codeforcesHandle, integrations, connectionStatus } = user;
+  const { _id, firstName, lastName, age, gender, skills, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle, integrations, connectionStatus } = user;
   const ghHandle = Array.isArray(githubHandle) ? githubHandle[0] : githubHandle;
   const cfHandle = Array.isArray(codeforcesHandle) ? codeforcesHandle[0] : codeforcesHandle;
+  const lcHandle = Array.isArray(leetcodeHandle) ? leetcodeHandle[0] : leetcodeHandle;
   const loggedInUserId = useSelector((store) => store.user?._id);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,9 +34,12 @@ const UserCard = ({ user }) => {
   const isProfilePage = location.pathname.includes('/profile');
   const [showGithubDrawer, setShowGithubDrawer] = useState(false);
   const [showCfDrawer, setShowCfDrawer] = useState(false);
+  const [showLcDrawer, setShowLcDrawer] = useState(false);
   const [liveStats, setLiveStats] = useState(integrations || {});
   const [isSyncingGithub, setIsSyncingGithub] = useState(false);
   const [isSyncingCf, setIsSyncingCf] = useState(false);
+  const [isSyncingLc, setIsSyncingLc] = useState(false);
+  const lcData = liveStats?.leetcode?.data || liveStats?.leetcode;
 
   const controls = useAnimation();
   const x = useMotionValue(0);
@@ -70,15 +75,16 @@ const UserCard = ({ user }) => {
 
   const triggerBackgroundSync = async (platform, handle) => {
     if (!handle) return;
-    const isGithub = platform === 'github';
-    if (isGithub) setIsSyncingGithub(true);
-    else setIsSyncingCf(true);
+    if (platform === 'github') setIsSyncingGithub(true);
+    else if(platform === 'codeforces') setIsSyncingCf(true);
+    else if(platform === 'leetcode') setIsSyncingLc(true);
     
-    const SPRING_BACKEND_URL = import.meta.env.VITE_STATS_SERVICE_URL || "https://dev-tinder-spring-backend.onrender.com";
+    //const SPRING_BACKEND_URL = import.meta.env.VITE_STATS_SERVICE_URL || "https://dev-tinder-spring-backend.onrender.com";
     
     try {
       const response = await axios.get(
-        `${SPRING_BACKEND_URL}/api/stats?${platform}=${handle}&userId=${_id}`
+        `${BASE_URL}/stats?${platform}=${handle}&userId=${_id}`, 
+        { withCredentials: true }
       );
 
       let fetchedStats = null;
@@ -98,8 +104,9 @@ const UserCard = ({ user }) => {
     } catch (error) {
       console.error(`Failed to sync ${platform}:`, error);
     } finally {
-      if (isGithub) setIsSyncingGithub(false);
-      else setIsSyncingCf(false);
+      if (platform === 'github') setIsSyncingGithub(false);
+      else if(platform === 'codeforces') setIsSyncingCf(false);
+      else if(platform === 'leetcode') setIsSyncingLc(false);
     }
   };
 
@@ -115,6 +122,13 @@ const UserCard = ({ user }) => {
     const willOpen = !showCfDrawer;
     setShowCfDrawer(willOpen);
     if (willOpen) triggerBackgroundSync('codeforces', cfHandle);
+  };
+
+  const handleLcClick = (e) => {
+    e.stopPropagation();
+    const willOpen = !showLcDrawer;
+    setShowLcDrawer(willOpen);
+    if (willOpen) triggerBackgroundSync('leetcode', lcHandle);
   };
 
   return (
@@ -190,7 +204,7 @@ const UserCard = ({ user }) => {
                 <div className="bg-[#1a1a1a] rounded-md border border-gray-800 overflow-hidden">
                   <div onClick={handleCfClick} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
                     <div className="flex items-center gap-2 text-white text-[11px] font-bold">
-                      <FaTrophy className="text-yellow-500" /><span>Codeforces: {cfHandle}</span>
+                      <SiCodeforces className="text-[#cbbd1f]" /><span>Codeforces: {cfHandle}</span>
                     </div>
                     {isSyncingCf ? (
                         <span className="loading loading-spinner loading-xs text-yellow-500"></span>
@@ -216,6 +230,78 @@ const UserCard = ({ user }) => {
                           <div className="grid grid-cols-2 gap-2 text-center">
                             <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(liveStats.codeforces.rank)} font-bold text-sm`}>{liveStats.codeforces.rank || "N/A"}</p><p className="text-[8px] uppercase text-gray-500">Rank</p></div>
                             <div className="bg-[#151515] p-1 rounded"><p className={`${getCfColor(liveStats.codeforces.rank)} font-bold text-sm`}>{liveStats.codeforces.rating || 0}</p><p className="text-[8px] uppercase text-gray-500">Rating</p></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {lcHandle && (
+                <div className="bg-[#1a1a1a] rounded-md border border-gray-800 overflow-hidden">
+                  <div onClick={handleLcClick} className="flex items-center justify-between p-2 cursor-pointer hover:bg-[#222]">
+                    <div className="flex items-center gap-2 text-white text-[11px] font-bold">
+                      <SiLeetcode className="text-[#FFA116]" /><span>LeetCode: {lcHandle}</span>
+                    </div>
+                    {isSyncingLc ? (
+                        <span className="loading loading-spinner loading-xs text-[#FFA116]"></span>
+                    ) : (
+                        showLcDrawer ? <FaChevronUp className="text-[10px]" /> : <FaChevronDown className="text-[10px]" />
+                    )}
+                  </div>
+                  
+                  {showLcDrawer && (
+                    <div className="p-3 bg-[#0a0a0a] border-t border-gray-800">
+                      {!liveStats?.leetcode && isSyncingLc && (
+                          <div className="flex flex-col items-center justify-center py-2">
+                              <span className="loading loading-spinner text-[#FFA116] mb-2"></span>
+                              <p className="text-[10px] text-gray-400">Fetching live stats...</p>
+                          </div>
+                      )}
+                      {liveStats?.leetcode && (
+                        <div className={`transition-opacity duration-500 ${isSyncingLc ? 'opacity-50' : 'opacity-100'}`}>
+                          
+                          {/* Profile Picture, Global Rank, and Contest Badge */}
+                          <div className="flex items-center gap-3 mb-3 border-b border-gray-900 pb-2">
+                            <img 
+                              src={lcData?.matchedUser?.profile?.userAvatar} 
+                              className="w-10 h-10 rounded-md border border-gray-700 object-cover" 
+                              alt="lc-avatar" 
+                            />
+                            <div>
+                              <p className="text-white text-xs font-bold">{lcHandle}</p>
+                              <p className="text-[10px] text-gray-500">Global Rank: {lcData?.matchedUser?.profile?.ranking?.toLocaleString() || "N/A"}</p>
+                              
+                              {/* Only shows if they have contest data */}
+                              {lcData?.userContestRanking && (
+                                  <p className="text-[10px] text-[#FFA116] font-semibold mt-0.5">
+                                      Rating: {Math.round(lcData.userContestRanking.rating)}
+                                      {lcData.userContestRanking.badge?.name && ` • ${lcData.userContestRanking.badge.name}`}
+                                  </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Problem Counts */}
+                          <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-gray-800">
+                            <div className="text-center">
+                              <p className="text-[#00b8a3] font-bold text-sm">
+                                {lcData?.matchedUser?.submitStats?.acSubmissionNum?.find(x => x.difficulty === 'Easy')?.count || 0}
+                              </p>
+                              <p className="text-[8px] uppercase text-gray-500">Easy</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[#ffc01e] font-bold text-sm">
+                                {lcData?.matchedUser?.submitStats?.acSubmissionNum?.find(x => x.difficulty === 'Medium')?.count || 0}
+                              </p>
+                              <p className="text-[8px] uppercase text-gray-500">Medium</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[#ef4743] font-bold text-sm">
+                                {lcData?.matchedUser?.submitStats?.acSubmissionNum?.find(x => x.difficulty === 'Hard')?.count || 0}
+                              </p>
+                              <p className="text-[8px] uppercase text-gray-500">Hard</p>
+                            </div>
                           </div>
                         </div>
                       )}
