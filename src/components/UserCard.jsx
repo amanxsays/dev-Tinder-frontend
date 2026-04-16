@@ -74,10 +74,10 @@ const UserCard = ({ user }) => {
     const isGithub = platform === 'github';
     if (isGithub) setIsSyncingGithub(true);
     else setIsSyncingCf(true);
-
+    const SPRING_BACKEND_URL = import.meta.env.STATS_SERVICE_URL;
     try {
       const response = await axios.get(
-        `${import.meta.env.STATS_SERVICE_URL}/api/stats?${platform}=${handle}&userId=${_id}`
+        `${SPRING_BACKEND_URL}/api/stats?${platform}=${handle}&userId=${_id}`
       );
       
       if (response.data && response.data[platform]) {
