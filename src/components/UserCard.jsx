@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { removeCard } from "../utils/feedSlice";
 import { FaGithub, FaTrophy, FaExternalLinkAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion,useAnimation, useMotionValue, useTransform } from "framer-motion";
+import { motion, useAnimation, useMotionValue, useTransform } from "framer-motion";
 
 const getCfColor = (rank) => {
   if (!rank) return "text-gray-500";
@@ -68,21 +68,33 @@ const UserCard = ({ user }) => {
     }
   };
 
-
   const triggerBackgroundSync = async (platform, handle) => {
     if (!handle) return;
     const isGithub = platform === 'github';
     if (isGithub) setIsSyncingGithub(true);
     else setIsSyncingCf(true);
+    
     const SPRING_BACKEND_URL = import.meta.env.VITE_STATS_SERVICE_URL || "https://dev-tinder-spring-backend.onrender.com";
+    
     try {
       const response = await axios.get(
         `${SPRING_BACKEND_URL}/api/stats?${platform}=${handle}&userId=${_id}`
       );
-      
-      if (response.data && response.data[platform]) {
-        setLiveStats(prev => ({ ...prev, [platform]: response.data[platform] }));
+
+      let fetchedStats = null;
+
+      if (response.data[platform]) {
+        fetchedStats = response.data[platform];
+      } else if (response.data.integrations && response.data.integrations[platform]) {
+        fetchedStats = response.data.integrations[platform];
+      } else if (response.data && typeof response.data === 'object') {
+        fetchedStats = response.data;
       }
+
+      if (fetchedStats) {
+        setLiveStats(prev => ({ ...prev, [platform]: fetchedStats }));
+      }
+
     } catch (error) {
       console.error(`Failed to sync ${platform}:`, error);
     } finally {
