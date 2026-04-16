@@ -77,7 +77,7 @@ const UserCard = ({ user }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/stats?${platform}=${handle}&userId=${_id}`
+        `${import.meta.env.STATS_SERVICE_URL}/api/stats?${platform}=${handle}&userId=${_id}`
       );
       
       if (response.data && response.data[platform]) {
