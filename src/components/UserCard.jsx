@@ -39,6 +39,9 @@ const UserCard = ({ user }) => {
   const [isSyncingGithub, setIsSyncingGithub] = useState(false);
   const [isSyncingCf, setIsSyncingCf] = useState(false);
   const [isSyncingLc, setIsSyncingLc] = useState(false);
+  const [hasSyncedGithub, setHasSyncedGithub] = useState(false);
+  const [hasSyncedCf, setHasSyncedCf] = useState(false);
+  const [hasSyncedLc, setHasSyncedLc] = useState(false);
   const lcData = liveStats?.leetcode?.data || liveStats?.leetcode;
 
   const controls = useAnimation();
@@ -114,21 +117,30 @@ const UserCard = ({ user }) => {
     e.stopPropagation();
     const willOpen = !showGithubDrawer;
     setShowGithubDrawer(willOpen);
-    if (willOpen) triggerBackgroundSync('github', ghHandle);
+    if (willOpen && !hasSyncedGithub){
+      triggerBackgroundSync('github', ghHandle);
+      setHasSyncedGithub(true);
+    }
   };
 
   const handleCfClick = (e) => {
     e.stopPropagation();
     const willOpen = !showCfDrawer;
     setShowCfDrawer(willOpen);
-    if (willOpen) triggerBackgroundSync('codeforces', cfHandle);
+    if (willOpen && !hasSyncedCf){
+      triggerBackgroundSync('codeforces', cfHandle);
+      setHasSyncedCf(true);
+    }
   };
 
   const handleLcClick = (e) => {
     e.stopPropagation();
     const willOpen = !showLcDrawer;
     setShowLcDrawer(willOpen);
-    if (willOpen) triggerBackgroundSync('leetcode', lcHandle);
+    if (willOpen && !hasSyncedLc){
+      triggerBackgroundSync('leetcode', lcHandle);
+      setHasSyncedLc(true);
+    }
   };
 
   return (
