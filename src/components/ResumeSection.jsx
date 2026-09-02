@@ -30,19 +30,56 @@ const ResumeSection = ({ user }) => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("resume", file);
-
     setIsUploading(true);
     try {
-      const res = await axios.post(BASE_URL + "/profile/resume/upload", formData, {
+      // 1. Ask our backend for a signed payload (no network call to Cloudinary happens here)
+      const { data: sig } = await axios.get(BASE_URL + "/profile/resume/upload-signature", {
         withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
       });
+
+      // 2. Upload the file straight from the browser to Cloudinary
+      const cloudForm = new FormData();
+      cloudForm.append("file", file);
+      cloudForm.append("api_key", sig.apiKey);
+      cloudForm.append("timestamp", sig.timestamp);
+      cloudForm.append("signature", sig.signature);
+      cloudForm.append("folder", sig.folder);
+      cloudForm.append("public_id", sig.publicId);
+
+      const cloudRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/raw/upload`,
+        cloudForm
+      );
+
+      // 3. If there was a previous resume, delete it from Cloudinary (also from the browser)
+      try {
+        const { data: destroySig } = await axios.get(BASE_URL + "/profile/resume/destroy-signature", {
+          withCredentials: true,
+        });
+        const destroyForm = new FormData();
+        destroyForm.append("public_id", destroySig.publicId);
+        destroyForm.append("api_key", destroySig.apiKey);
+        destroyForm.append("timestamp", destroySig.timestamp);
+        destroyForm.append("signature", destroySig.signature);
+        await axios.post(`https://api.cloudinary.com/v1_1/${destroySig.cloudName}/raw/destroy`, destroyForm);
+      } catch {
+        // No previous resume, or cleanup failed — not fatal, continue.
+      }
+
+      // 4. Save the new resume details on our backend
+      const res = await axios.patch(
+        BASE_URL + "/profile/resume",
+        {
+          resumeUrl: cloudRes.data.secure_url,
+          resumeFileName: file.name,
+          resumePublicId: cloudRes.data.public_id,
+        },
+        { withCredentials: true }
+      );
       dispatch(addUser(res.data.data));
       toast.success(res.data.message);
     } catch (err) {
-      toast.error(err.response?.data || "Failed to upload resume");
+      toast.error(err.response?.data?.message || err.message || "Failed to upload resume");
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -57,7 +94,7 @@ const ResumeSection = ({ user }) => {
           <FaFilePdf className="text-red-500 shrink-0" size={20} />
           {resumeFileName ? (
             <a
-              href={`${BASE_URL}${resumeUrl}`}
+              href={resumeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-gray-300 truncate hover:text-blue-400 hover:underline"
