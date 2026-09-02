@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import UserCard from "./UserCard";
+import ResumeSection from "./ResumeSection";
 
 const ProfileEdit = ({ user }) => {
   const dispatch = useDispatch();
@@ -140,6 +141,7 @@ const ProfileEdit = ({ user }) => {
                 onChange={(e) => setLeetcodeHandle(e.target.value)}
               />
             </fieldset>
+            <ResumeSection user={user} />
           </div>
           <div className="flex justify-center card-actions">
             <button
