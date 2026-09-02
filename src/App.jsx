@@ -10,28 +10,31 @@ import appStore from "./utils/appStore";
 import Requests from "./components/Requests";
 import Connections from "./components/Connections";
 import Chat from "./components/Chat";
+import AiDrawerLayout from "./components/AiDrawerLayout.jsx";
 
 function App() {
-  return (
-    <>
-      <Provider store={appStore}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Body />}>
-              <Route path="/" element={<Feed />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/connections" element={<Connections />} />
-              <Route path="/requests" element={<Requests />} />
-              <Route path="/chat/:targetUserId" element={<Chat />} />
-              <Route path="/profile/:userId" element={<ViewProfile />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-        <Toast />
-      </Provider>
-    </>
-  );
+    return (
+        <>
+            <Provider store={appStore}>
+                <BrowserRouter>
+                    <AiDrawerLayout>
+                        <Routes>
+                            <Route path="/" element={<Body />}>
+                                <Route path="/" element={<Feed />} />
+                                <Route path="/login" element={<Login />} />
+                                <Route path="/profile" element={<Profile />} />
+                                <Route path="/connections" element={<Connections />} />
+                                <Route path="/requests" element={<Requests />} />
+                                <Route path="/chat/:targetUserId" element={<Chat />} />
+                                <Route path="/profile/:userId" element={<ViewProfile />} />
+                            </Route>
+                        </Routes>
+                    </AiDrawerLayout>
+                </BrowserRouter>
+                <Toast />
+            </Provider>
+        </>
+    );
 }
 
 export default App;
