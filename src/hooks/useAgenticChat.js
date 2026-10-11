@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { AI_CHAT_ENABLED } from '../utils/constants';
+import { AI_CHAT_ENABLED, AI_SERVICE_URL } from '../utils/constants';
+import { createSseParser } from '../utils/sseParser';
+import { getResumeUrl } from '../utils/resumeSources';
 
 export const useAgenticChat = () => {
     const [aiResponse, setAiResponse] = useState('');
@@ -14,62 +16,75 @@ export const useAgenticChat = () => {
         setAiStatus('Connecting to Agentic AI...');
 
         let finalMessage = '';
+        let sources = [];
+        const readSources = (received) => {
+            if (!Array.isArray(received)) return;
+            sources = received.filter(source => source && typeof source.documentId === 'string'
+                && typeof source.fileName === 'string')
+                .map(source => ({ ...source, fileUrl: getResumeUrl(source.fileUrl) }));
+        };
 
         try {
-            // Note: Ensure your Spring Boot endpoint is a @PostMapping since you are using POST here
-            const response = await fetch('http://localhost:8080/api/chat/stream', {
+            if (!AI_SERVICE_URL) {
+                throw new Error('VITE_STATS_SERVICE_URL is required for AI chat');
+            }
+            const response = await fetch(`${AI_SERVICE_URL}/api/chat/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query, userId }),
             });
 
+            if (!response.ok) throw new Error(`AI request failed (${response.status})`);
             if (!response.body) throw new Error('Stream not supported');
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder('utf-8');
-            let done = false;
-            
-            // Move currentEvent outside the while loop so it persists across stream chunks
-            let currentEvent = '';
-
-            while (!done) {
-                const { value, done: readerDone } = await reader.read();
-                done = readerDone;
-
-                if (value) {
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-
-                    lines.forEach(line => {
-                        // FIX 1: Listen for 'event:' instead of 'name:'
-                        if (line.startsWith('event:')) {
-                            currentEvent = line.replace('event:', '').trim();
-                        } 
-                        else if (line.startsWith('data:')) {
-                            // FIX 2: Use substring(5) to preserve intentional spacing from the AI
-                            const dataPayload = line.substring(5);
-
-                            if (currentEvent === 'status') {
-                                setAiStatus(dataPayload.trim());
-                            } 
-                            else if (currentEvent === 'message') {
-                                // FIX 3: Append the text and a newline to build the full paragraph
-                                finalMessage += dataPayload + '\n';
-                                setAiResponse(finalMessage);
-                            }
-                        }
-                    });
+            const parser = createSseParser(({ event, data }) => {
+                if (event === 'status') setAiStatus(data.trim());
+                if (event === 'sources') {
+                    readSources(JSON.parse(data));
                 }
+                if (event === 'message' || event === 'error') {
+                    if (event === 'error') sources = [];
+                    let answerText = data;
+                    if (event === 'message') {
+                        try {
+                            const answer = JSON.parse(data);
+                            if (typeof answer?.text === 'string' && Array.isArray(answer.sources)) {
+                                answerText = answer.text;
+                                readSources(answer.sources);
+                            }
+                        } catch {
+                            // Older service versions send plain-text answers.
+                        }
+                    }
+                    finalMessage += answerText + '\n';
+                    setAiResponse(finalMessage);
+                }
+            });
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    parser.push(decoder.decode(value, { stream: true }));
+                }
+                parser.push(decoder.decode());
+                parser.finish();
+            } finally {
+                reader.releaseLock();
             }
         } catch (error) {
             console.error('Failed to stream AI:', error);
             finalMessage = "I encountered a network error connecting to the AI server.";
         } finally {
-            setIsAiThinking(false);
-            setAiStatus('');
-            if (onComplete && finalMessage) {
-                // Trim any trailing newlines before pushing to the chat bubble
-                onComplete(finalMessage.trim()); 
+            try {
+                if (onComplete && finalMessage) {
+                    setAiStatus('Checking current resumes...');
+                    await onComplete(finalMessage.trim(), sources);
+                }
+            } finally {
+                setIsAiThinking(false);
+                setAiStatus('');
             }
         }
     };

@@ -1,7 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { useAgenticChat } from "../hooks/useAgenticChat";
-import { AI_CHAT_ENABLED } from "../utils/constants";
+import { AI_CHAT_ENABLED, BASE_URL } from "../utils/constants";
+import { findResumeSource, splitResumeReferences } from "../utils/resumeSources";
+import ResumePreview from "./ResumePreview";
 
 /* ------------------------------------------------------------------
    Markdown rendering, written inline so you don't need react-markdown.
@@ -10,8 +14,26 @@ import { AI_CHAT_ENABLED } from "../utils/constants";
 ------------------------------------------------------------------ */
 
 const INLINE_TOKENS = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+const ResumeReferenceContext = createContext({ sources: [], onOpenResume: () => {} });
+
+const ResumeReferenceButton = ({ source, children, onClick }) => (
+    <button type="button" onClick={() => onClick(source)} title={`View ${source.fileName}`}
+        className="cursor-pointer break-all text-left text-sky-300 underline decoration-sky-400/40 underline-offset-2 transition hover:text-sky-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400">
+        {children}
+    </button>
+);
+
+const ResumeText = ({ text }) => {
+    const { sources, onOpenResume } = useContext(ResumeReferenceContext);
+    return splitResumeReferences(text, sources).filter(Boolean).map((part, index) => {
+        const source = findResumeSource(part, sources);
+        return source ? <ResumeReferenceButton key={index} source={source} onClick={onOpenResume}>{part}</ResumeReferenceButton>
+            : <React.Fragment key={index}>{part}</React.Fragment>;
+    });
+};
 
 const Inline = ({ text }) => {
+    const { sources, onOpenResume } = useContext(ResumeReferenceContext);
     const parts = String(text).split(INLINE_TOKENS).filter(Boolean);
 
     return (
@@ -20,7 +42,7 @@ const Inline = ({ text }) => {
                 if (part.startsWith("**") && part.endsWith("**")) {
                     return (
                         <strong key={i} className="font-semibold text-white">
-                            {part.slice(2, -2)}
+                            <ResumeText text={part.slice(2, -2)} />
                         </strong>
                     );
                 }
@@ -30,19 +52,27 @@ const Inline = ({ text }) => {
                             key={i}
                             className="mx-[1px] rounded-md border border-white/10 bg-white/[0.07] px-1.5 py-[2px] font-mono text-[12px] text-sky-300"
                         >
-                            {part.slice(1, -1)}
+                            <ResumeText text={part.slice(1, -1)} />
                         </code>
                     );
                 }
                 if (part.startsWith("*") && part.endsWith("*")) {
                     return (
                         <em key={i} className="italic text-slate-200">
-                            {part.slice(1, -1)}
+                            <ResumeText text={part.slice(1, -1)} />
                         </em>
                     );
                 }
                 const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
                 if (link) {
+                    const source = findResumeSource(link[2], sources)
+                        || (!link[2].startsWith("resume:") && findResumeSource(link[1], sources));
+                    if (source) {
+                        return <ResumeReferenceButton key={i} source={source} onClick={onOpenResume}>{link[1]}</ResumeReferenceButton>;
+                    }
+                    if (!/^(https?:|mailto:)/i.test(link[2])) {
+                        return <span key={i}>{link[1]}</span>;
+                    }
                     return (
                         <a
                             key={i}
@@ -55,7 +85,7 @@ const Inline = ({ text }) => {
                         </a>
                     );
                 }
-                return <span key={i}>{part}</span>;
+                return <span key={i}><ResumeText text={part} /></span>;
             })}
         </>
     );
@@ -69,7 +99,7 @@ const CodeBlock = ({ code, lang }) => {
             await navigator.clipboard.writeText(code);
             setCopied(true);
             setTimeout(() => setCopied(false), 1600);
-        } catch (e) {
+        } catch {
             /* clipboard blocked, ignore */
         }
     };
@@ -97,7 +127,7 @@ const CodeBlock = ({ code, lang }) => {
     );
 };
 
-const Markdown = ({ text }) => {
+const Markdown = ({ text, sources = [], onOpenResume = () => {} }) => {
     const lines = String(text).split("\n");
     const blocks = [];
     let i = 0;
@@ -243,7 +273,9 @@ const Markdown = ({ text }) => {
         );
     }
 
-    return <div className="text-[13.5px] leading-[1.7] text-slate-200">{blocks}</div>;
+    return <ResumeReferenceContext.Provider value={{ sources, onOpenResume }}>
+        <div className="text-[13.5px] leading-[1.7] text-slate-200">{blocks}</div>
+    </ResumeReferenceContext.Provider>;
 };
 
 /* ------------------------------------------------------------------
@@ -353,6 +385,8 @@ const AiDrawerLayout = ({ children }) => {
     const user = useSelector((store) => store.user);
     const msgRef = useRef(null);
     const scrollRef = useRef(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedResume, setSelectedResume] = useState(null);
 
     const { askAiRecruiter, aiStatus, isAiThinking, aiResponse } = useAgenticChat();
 
@@ -365,6 +399,61 @@ const AiDrawerLayout = ({ children }) => {
             time: new Date(),
         },
     ]);
+    const conversationRef = useRef({ messages: [], selectedResume: null });
+    useEffect(() => { conversationRef.current = { messages, selectedResume }; }, [messages, selectedResume]);
+
+    const invalidateSources = useCallback((retiredIds) => {
+        if (!retiredIds.size) return;
+        setMessages(previous => previous.map(message => message.sources?.some(source => retiredIds.has(source.documentId))
+            ? { ...message, text: "A resume used in this answer was replaced or removed. Ask again for current information.", sources: [] }
+            : message));
+        setSelectedResume(previous => retiredIds.has(previous?.documentId) ? null : previous);
+    }, []);
+
+    const checkSources = useCallback(async (sources) => {
+        const current = [];
+        for (let start = 0; start < sources.length; start += 100) {
+            const response = await axios.post(BASE_URL + "/profile/resume/active-sources",
+                { sources: sources.slice(start, start + 100) }, { withCredentials: true });
+            current.push(...response.data.sources);
+        }
+        return current;
+    }, []);
+
+    const openResume = async (source) => {
+        try {
+            const current = await checkSources([source]);
+            if (current.length) setSelectedResume(current[0]);
+            else invalidateSources(new Set([source.documentId]));
+        } catch { toast.error("Could not check this resume. Please try again."); }
+    };
+
+    useEffect(() => {
+        if (!AI_CHAT_ENABLED || !isDrawerOpen) return;
+        const refresh = async () => {
+            const sources = [...new Map(conversationRef.current.messages.flatMap(message => message.sources || [])
+                .map(source => [source.documentId, source])).values()];
+            if (!sources.length) return;
+            try {
+                const currentIds = new Set((await checkSources(sources)).map(source => source.documentId));
+                invalidateSources(new Set(sources.filter(source => !currentIds.has(source.documentId)).map(source => source.documentId)));
+            } catch { /* Retry on the next focus or preview click. */ }
+        };
+        const onChange = (event) => {
+            const retired = conversationRef.current.messages.flatMap(message => message.sources || [])
+                .filter(source => source.candidateId === event.detail.candidateId).map(source => source.documentId);
+            invalidateSources(new Set(retired));
+        };
+        void refresh();
+        window.addEventListener("focus", refresh);
+        window.addEventListener("devtinder:resume-changed", onChange);
+        const timer = window.setInterval(refresh, 30000);
+        return () => {
+            window.removeEventListener("focus", refresh);
+            window.removeEventListener("devtinder:resume-changed", onChange);
+            window.clearInterval(timer);
+        };
+    }, [isDrawerOpen, checkSources, invalidateSources]);
 
     /* the hook exposes only the current status, so keep a history of them */
     useEffect(() => {
@@ -379,6 +468,17 @@ const AiDrawerLayout = ({ children }) => {
         const node = scrollRef.current;
         if (node) node.scrollTop = node.scrollHeight;
     }, [messages, steps, aiResponse, isAiThinking]);
+
+    useEffect(() => {
+        if (!isDrawerOpen) return;
+        const onKeyDown = (event) => {
+            if (event.key !== "Escape") return;
+            if (selectedResume) setSelectedResume(null);
+            else setIsDrawerOpen(false);
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [isDrawerOpen, selectedResume]);
 
     const handleTime = (time) => {
         const date = new Date(time);
@@ -409,13 +509,28 @@ const AiDrawerLayout = ({ children }) => {
         if (msgRef.current) msgRef.current.value = "";
         setSteps([]);
 
-        await askAiRecruiter(userText, currentUserId, (finalAiText) => {
+        await askAiRecruiter(userText, currentUserId, async (finalAiText, sources = []) => {
+            let text = finalAiText;
+            let currentSources = sources;
+            if (sources.length) {
+                try {
+                    currentSources = await checkSources(sources);
+                    if (currentSources.length !== sources.length) {
+                        text = "A resume used in this answer was replaced or removed. Ask again for current information.";
+                        currentSources = [];
+                    }
+                } catch {
+                    text = "Could not verify the resumes used in this answer. Please try again.";
+                    currentSources = [];
+                }
+            }
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: "ai",
                     firstName: "DevTinder AI",
-                    text: finalAiText,
+                    text,
+                    sources: currentSources,
                     time: new Date(),
                 },
             ]);
@@ -465,7 +580,10 @@ const AiDrawerLayout = ({ children }) => {
         }
       `}</style>
 
-            <input id="ai-drawer" type="checkbox" className="drawer-toggle" />
+            <input id="ai-drawer" type="checkbox" className="drawer-toggle" checked={isDrawerOpen} onChange={(event) => {
+                setIsDrawerOpen(event.target.checked);
+                if (!event.target.checked) setSelectedResume(null);
+            }} />
 
             <div className="drawer-content flex flex-col">
                 {children}
@@ -499,7 +617,9 @@ const AiDrawerLayout = ({ children }) => {
                     className="drawer-overlay backdrop-blur-[2px]"
                 ></label>
 
-                <aside className="ai-grid flex h-full w-[min(430px,100vw)] flex-col border-l border-white/10 bg-[#0A0B14] text-slate-200">
+                <div className={`relative flex h-full max-w-full ${selectedResume ? "w-[1200px]" : "w-[430px]"}`}>
+                {selectedResume && <ResumePreview key={`${selectedResume.documentId}:${selectedResume.fileUrl}`} source={selectedResume} onClose={() => setSelectedResume(null)} />}
+                <aside className={`ai-grid ${selectedResume ? "hidden md:flex" : "flex"} h-full w-full shrink-0 flex-col border-l border-white/10 bg-[#0A0B14] text-slate-200 md:w-[430px]`}>
                     {/* Header */}
                     <header className="relative flex items-center gap-3 border-b border-white/10 bg-gradient-to-b from-indigo-500/[0.12] to-transparent px-5 py-4">
                         <AgentMark size={38} live={isAiThinking} />
@@ -559,7 +679,21 @@ const AiDrawerLayout = ({ children }) => {
                                             </span>
                                         </div>
                                         <div className="rounded-2xl rounded-tl-md border border-white/10 bg-white/[0.04] px-4 py-3">
-                                            <Markdown text={mess.text} />
+                                            <Markdown text={mess.text} sources={mess.sources} onOpenResume={openResume} />
+                                            {mess.sources?.length > 0 && (
+                                                <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                                                    <p className="text-[10.5px] uppercase tracking-wider text-slate-500">Resumes used</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {mess.sources.map((source) => (
+                                                            <button type="button" key={source.documentId} onClick={() => openResume(source)}
+                                                                aria-label={`Preview ${source.fileName}`} aria-pressed={selectedResume?.documentId === source.documentId}
+                                                                className={`max-w-full truncate rounded-lg border px-2.5 py-1.5 text-xs text-sky-300 transition hover:bg-sky-400/10 ${selectedResume?.documentId === source.documentId ? "border-sky-400/60 bg-sky-400/10" : "border-sky-400/20 bg-sky-400/5"}`}>
+                                                                {source.fileName}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -632,6 +766,7 @@ const AiDrawerLayout = ({ children }) => {
                         </p>
                     </div>
                 </aside>
+                </div>
             </div>
         </div>
     );

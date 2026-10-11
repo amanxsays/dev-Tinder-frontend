@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 import { FaFilePdf, FaUpload } from "react-icons/fa";
+import { getApiErrorMessage } from "../utils/apiErrors";
 
 const MAX_SIZE_MB = 5;
 
@@ -19,18 +20,19 @@ const ResumeSection = ({ user }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== "application/pdf") {
+    if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== "application/pdf")) {
       toast.error("Only PDF files are allowed");
       e.target.value = "";
       return;
     }
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+    if (!file.size || file.size > MAX_SIZE_MB * 1024 * 1024) {
       toast.error(`Resume must be smaller than ${MAX_SIZE_MB}MB`);
       e.target.value = "";
       return;
     }
 
     setIsUploading(true);
+    let uploadStage = "permission";
     try {
       // 1. Ask our backend for a signed payload (no network call to Cloudinary happens here)
       const { data: sig } = await axios.get(BASE_URL + "/profile/resume/upload-signature", {
@@ -38,6 +40,7 @@ const ResumeSection = ({ user }) => {
       });
 
       // 2. Upload the file straight from the browser to Cloudinary
+      uploadStage = "upload";
       const cloudForm = new FormData();
       cloudForm.append("file", file);
       cloudForm.append("api_key", sig.apiKey);
@@ -51,22 +54,8 @@ const ResumeSection = ({ user }) => {
         cloudForm
       );
 
-      // 3. If there was a previous resume, delete it from Cloudinary (also from the browser)
-      try {
-        const { data: destroySig } = await axios.get(BASE_URL + "/profile/resume/destroy-signature", {
-          withCredentials: true,
-        });
-        const destroyForm = new FormData();
-        destroyForm.append("public_id", destroySig.publicId);
-        destroyForm.append("api_key", destroySig.apiKey);
-        destroyForm.append("timestamp", destroySig.timestamp);
-        destroyForm.append("signature", destroySig.signature);
-        await axios.post(`https://api.cloudinary.com/v1_1/${destroySig.cloudName}/raw/destroy`, destroyForm);
-      } catch {
-        // No previous resume, or cleanup failed — not fatal, continue.
-      }
-
-      // 4. Save the new resume details on our backend
+      // Save first; the backend retires the old file and search data after success.
+      uploadStage = "save";
       const res = await axios.patch(
         BASE_URL + "/profile/resume",
         {
@@ -77,13 +66,28 @@ const ResumeSection = ({ user }) => {
         { withCredentials: true }
       );
       dispatch(addUser(res.data.data));
+      window.dispatchEvent(new CustomEvent("devtinder:resume-changed", { detail: { candidateId: user._id } }));
       toast.success(res.data.message);
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || "Failed to upload resume");
+      const fallback = uploadStage === "save"
+        ? "Your PDF uploaded, but saving it failed. Refresh the page and try again."
+        : "Could not upload your resume. Check your connection and try again.";
+      toast.error(getApiErrorMessage(err, fallback));
     } finally {
       setIsUploading(false);
       e.target.value = "";
     }
+  };
+
+  const removeResume = async () => {
+    setIsUploading(true);
+    try {
+      const res = await axios.delete(BASE_URL + "/profile/resume", { withCredentials: true });
+      dispatch(addUser(res.data.data));
+      window.dispatchEvent(new CustomEvent("devtinder:resume-changed", { detail: { candidateId: user._id } }));
+      toast.success(res.data.message);
+    } catch (error) { toast.error(getApiErrorMessage(error, "Could not remove your resume. Please try again.")); }
+    finally { setIsUploading(false); }
   };
 
   return (
@@ -106,6 +110,8 @@ const ResumeSection = ({ user }) => {
             <span className="text-xs text-gray-500 italic">No resume uploaded</span>
           )}
         </div>
+        {resumeFileName && <button type="button" onClick={removeResume} disabled={isUploading}
+          className="btn btn-xs btn-ghost text-red-400 shrink-0">Remove</button>}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}

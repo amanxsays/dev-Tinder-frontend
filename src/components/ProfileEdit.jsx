@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import UserCard from "./UserCard";
 import ResumeSection from "./ResumeSection";
+import { getApiErrorMessage } from "../utils/apiErrors";
 
 const ProfileEdit = ({ user }) => {
   const dispatch = useDispatch();
@@ -30,7 +31,7 @@ const ProfileEdit = ({ user }) => {
       dispatch(addUser(res.data.data));
       toast.success(res.data.message);
     } catch (err) {
-      toast.error(err.response.data);
+      toast.error(getApiErrorMessage(err, "Could not save your profile. Check your connection and try again."));
     }
   };
 

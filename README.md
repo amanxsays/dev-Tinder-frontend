@@ -35,10 +35,10 @@ flowchart LR
     Comp -- "axios (cookie auth)<br/>VITE_API_URL" --> BE
     Sock <-- "chat events" --> BE
     Comp -- "resume PDF (signed upload)" --> Cloud
-    Hook -- "POST /api/chat/stream (SSE)<br/>hardcoded localhost:8080" --> Java
+    Hook -- "POST /api/chat/stream (SSE)<br/>VITE_STATS_SERVICE_URL" --> Java
 ```
 
-> ⚠️ The "AI Recruiter" chat drawer (`useAgenticChat.js`) calls `integration-service` **directly**, bypassing the Node backend, and the URL is currently hardcoded to `http://localhost:8080` rather than read from an env var. `VITE_STATS_SERVICE_URL` exists in `.env` but is currently unused — live stats are fetched through the backend's `/stats` proxy instead.
+The "AI Recruiter" chat drawer uses `VITE_STATS_SERVICE_URL` to reach the integration service. Local development forwards SSE through Vite's `/integration-api` proxy; production connects to the configured service directly. Stats are fetched through the Node backend's `/stats` proxy.
 
 ## App structure
 
@@ -135,6 +135,18 @@ VITE_STATS_SERVICE_URL=http://localhost:8080
 VITE_AI_CHAT_ENABLED=false
 ```
 
+Local HTTP API calls use `/api` on the Vite server, which forwards requests to
+`VITE_API_URL` and preserves authentication cookies. This avoids browser CORS
+preflights between ports 5173 and 7777 for profile saving and resume updates.
+Restart Vite after changing the proxy target. Production builds use
+`VITE_API_URL` directly; human-chat WebSockets also connect to that URL directly.
+
+AI chat uses `VITE_STATS_SERVICE_URL`. Start the integration service separately:
+Docker Desktop alone does not start it. Verify `http://localhost:8080/api/ping`
+before sending a chat request. On Netlify, set this variable to the deployed
+integration service's HTTPS base URL and rebuild; localhost refers to the visitor's
+own computer.
+
 AI chat is enabled only when `VITE_AI_CHAT_ENABLED` is exactly `true`. With
 `false` or a missing value, the AI drawer is hidden and both frontend AI chat
 request paths are blocked. Human chat remains available. Restart Vite after
@@ -150,6 +162,27 @@ reload to receive the new version.
 This flag controls the frontend only. Direct requests to the integration-service
 API and other LLM features, such as resume embeddings, require server-side
 controls to enforce a spending limit.
+
+### Resume previews in AI chat
+
+AI answers now include resume source metadata from the integration service.
+Click a blue resume citation or a **Resumes used** button to view the PDF beside
+the chat on desktop. On mobile the preview fills the panel; **Back to chat**
+returns to the conversation. The preview also includes **Open in new tab** for
+browsers that cannot embed the PDF. Opening a resume does not call the LLM.
+
+Deploy the frontend, Node backend and integration service together, then reload.
+Resume replacement saves a new version ID before retiring the old file, Mongo
+chunks and Pinecone vectors. Removing a resume also removes its search data.
+Only the current version can supply context or citations for new AI answers.
+Existing chat answers are checked when opening the drawer, regaining focus,
+every 30 seconds while the drawer is open, and before opening a PDF. An answer
+using a retired resume is cleared with a request to ask again for current
+information. These checks and deletions make no LLM or embedding calls; indexing
+the newly uploaded PDF still makes embedding calls.
+
+Run the proxy, citation and streaming regression checks with
+`node --test tests/apiProxy.test.mjs tests/resumeSources.test.mjs tests/sseParser.test.mjs`.
 
 ### 3. Run
 
