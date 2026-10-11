@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AI_CHAT_ENABLED } from '../utils/constants';
 
 export const useAgenticChat = () => {
     const [aiResponse, setAiResponse] = useState('');
@@ -6,6 +7,8 @@ export const useAgenticChat = () => {
     const [isAiThinking, setIsAiThinking] = useState(false);
 
     const askAiRecruiter = async (query, userId, onComplete) => {
+        if (!AI_CHAT_ENABLED) return;
+
         setIsAiThinking(true);
         setAiResponse('');
         setAiStatus('Connecting to Agentic AI...');

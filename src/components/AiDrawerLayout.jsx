@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAgenticChat } from "../hooks/useAgenticChat";
+import { AI_CHAT_ENABLED } from "../utils/constants";
 
 /* ------------------------------------------------------------------
    Markdown rendering, written inline so you don't need react-markdown.
@@ -387,6 +388,8 @@ const AiDrawerLayout = ({ children }) => {
     };
 
     const send = async (rawText) => {
+        if (!AI_CHAT_ENABLED) return;
+
         const userText = (rawText ?? msgRef.current?.value ?? "").trim();
         if (!userText || isAiThinking) return;
 
@@ -421,6 +424,8 @@ const AiDrawerLayout = ({ children }) => {
     };
 
     const showSuggestions = messages.length === 1 && !isAiThinking;
+
+    if (!AI_CHAT_ENABLED) return children;
 
     return (
         <div className="drawer drawer-end h-screen">

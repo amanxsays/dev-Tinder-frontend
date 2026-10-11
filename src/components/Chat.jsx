@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { createSocketConnection } from "../utils/socket";
 import axios from "axios";
-import { BASE_URL } from "../utils/constants";
+import { AI_CHAT_ENABLED, BASE_URL } from "../utils/constants";
 
 const Chat = () => {
   const { targetUserId } = useParams();
@@ -37,8 +37,9 @@ const Chat = () => {
   };
 
   useEffect(() => {
+    if (isAIChat) return;
     fetchChat();
-  }, [targetUserId]);
+  }, [targetUserId, isAIChat]);
 
   // Only connect to WebSocket if it's a human chat
   useEffect(() => {
@@ -57,6 +58,8 @@ const Chat = () => {
   }, [userId, targetUserId, isAIChat]);
 
   const handleAIStream = (query) => {
+    if (!AI_CHAT_ENABLED) return;
+
     const jobId = crypto.randomUUID(); 
     
     // Add the 'id' field so we can target this exact bubble
@@ -94,6 +97,8 @@ const Chat = () => {
   };
 
   const handleSend = () => {
+    if (isAIChat && !AI_CHAT_ENABLED) return;
+
     const textValue = msg.current.value;
     if (!textValue.trim()) return;
 
@@ -138,6 +143,9 @@ const Chat = () => {
             <p>Chat</p>
           </div>
           <div className="m-1">
+            {isAIChat && !AI_CHAT_ENABLED && (
+              <p className="p-3 text-gray-400" role="status">AI chat is currently unavailable.</p>
+            )}
             {messages.map((mess, index) => {
               return (
                 <div key={index}>
@@ -188,10 +196,11 @@ const Chat = () => {
                 ref={msg}
                 type="text"
                 className="input w-full"
-                placeholder="Type a message"
+                placeholder={isAIChat && !AI_CHAT_ENABLED ? "AI chat is unavailable" : "Type a message"}
+                disabled={isAIChat && !AI_CHAT_ENABLED}
               />
             </fieldset>
-            <button className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] w-20 my-auto rounded-l-none">
+            <button disabled={isAIChat && !AI_CHAT_ENABLED} className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] w-20 my-auto rounded-l-none">
               Send
             </button>
           </form>

@@ -132,7 +132,24 @@ Create a `.env` file in `dev-Tinder-frontend/` with:
 ```env
 VITE_API_URL=http://localhost:7777
 VITE_STATS_SERVICE_URL=http://localhost:8080
+VITE_AI_CHAT_ENABLED=false
 ```
+
+AI chat is enabled only when `VITE_AI_CHAT_ENABLED` is exactly `true`. With
+`false` or a missing value, the AI drawer is hidden and both frontend AI chat
+request paths are blocked. Human chat remains available. Restart Vite after
+changing your local `.env`.
+
+On Netlify, add `VITE_AI_CHAT_ENABLED` in **Project configuration > Environment
+variables**, make it available to the build, and set its production value to
+`true` to enable chat or `false` to disable it. Trigger a new build and deploy
+after each change: Vite embeds the flag into the generated JavaScript, so it
+cannot change a deployment that is already built. Existing open tabs need to
+reload to receive the new version.
+
+This flag controls the frontend only. Direct requests to the integration-service
+API and other LLM features, such as resume embeddings, require server-side
+controls to enforce a spending limit.
 
 ### 3. Run
 
