@@ -8,6 +8,7 @@ import { BASE_URL } from "../utils/constants"
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import { PiPasswordBold } from "react-icons/pi";
 import CountdownTimer from "./OtpCoundown";
+import "../styles/auth.css";
 
 
 const Login = () => {
@@ -88,14 +89,17 @@ const Login = () => {
   
 
   return (
-    <div>
-      <div className="absolute top-10 z-[-10] overflow-hidden">
-        <div>
-          <img src="/cover_page4.png"></img>
-        </div>
+    <div className="dt-auth-page">
+      <div className="dt-auth-backdrop" aria-hidden="true">
+        <svg className="dt-auth-contours" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" fill="none" focusable="false">
+          <path d="M-260 870C90 870 160 290 510 290S790 40 870-180" />
+          <path d="M-300 930C90 930 200 350 550 350S850 90 930-180" />
+          <path d="M1040 1180C1000 840 1380 900 1420 540S1690 220 1840 220" />
+          <path d="M1100 1200C1060 900 1440 940 1480 580S1740 280 1900 280" />
+        </svg>
       </div>
     <div className="flex justify-center pt-13">
-      <div className="card w-96 bg-[#0f0f10] card-lg shadow-sm">
+      <div className="dt-auth-card card w-96 bg-[#0f0f10] card-lg shadow-sm">
         <form className="card-body" onSubmit={(e) => e.preventDefault()}>
           <h2 className="card-title mb-8 text-2xl">{isSignUpPage?"Sign Up":"Login"}</h2>
           <div className={isSignUpPage?"":"hidden"}>
