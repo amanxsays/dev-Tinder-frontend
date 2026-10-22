@@ -1,0 +1,78 @@
+/* Shared application chrome, with DevTinder blue reserved for useful accents. */
+.dt-app-frame {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  color: #e5edf7;
+  color-scheme: dark;
+}
+.dt-app-backdrop {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 8% 16%, #164b7c30, transparent 50%),
+    radial-gradient(ellipse at 94% 80%, #15556b1f, transparent 46%),
+    linear-gradient(140deg, #111b29, #0b111b 58%, #0e1822);
+}
+.dt-app-backdrop::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(#98bce906 1px, transparent 1px), linear-gradient(90deg, #98bce906 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse at center, transparent 18%, #0009 100%);
+}
+.dt-app-main { min-height: calc(100dvh - 150px); padding: 48px 16px 40px; }
+.dt-app-main:has(.dt-auth-page) { padding: 48px 0 0; }
+.dt-app-frame > footer { margin-top: 0; background: #0d1520d9; border-top: 1px solid #bddbfb0c; color: #95a7bb; }
+.dt-site-header.navbar {
+  position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 24px;
+  min-height: 80px; padding: 14px clamp(16px, 3vw, 48px);
+  background: #101923e8; border-bottom: 1px solid #c1dafa17;
+  box-shadow: 0 5px 24px #0000001a; backdrop-filter: blur(18px);
+}
+.dt-site-brand { display: inline-flex; align-items: center; gap: 12px; flex: none; color: #f0f6ff; text-decoration: none; }
+.dt-site-brand img { width: 34px; height: 40px; object-fit: contain; }
+.dt-site-brand strong { display: block; font-size: 22px; font-weight: 650; line-height: 1.2; letter-spacing: -.035em; }
+.dt-site-brand small { display: block; color: #8298b0; font-size: 8px; font-weight: 500; letter-spacing: .16em; margin-top: 4px; }
+.dt-header-search { display: flex; align-items: center; gap: 10px; width: clamp(150px, 22vw, 300px); margin-left: auto; padding: 0 14px; min-height: 42px; color: #859bb2; border: 1px solid #bddbfb17; border-radius: 12px; background: #1a273485; }
+.dt-header-search input { width: 100%; min-width: 0; background: transparent; outline: none; color: #e2edfa; font: inherit; font-size: 13px; }
+.dt-header-search input::placeholder { color: #8b9fb6; }
+.dt-header-search:focus-within { border-color: #64b5ec80; box-shadow: 0 0 0 3px #3998d90d; }
+.dt-header-actions { display: flex; align-items: center; gap: 10px; }
+.dt-discover-link { border: 1px solid transparent; padding: 11px 16px; border-radius: 10px; color: #a9bbcf; font-size: 13px; min-height: 44px; }
+.dt-discover-link.active { background: #2791d313; border-color: #5ea6d324; color: #b5ddfa; }
+.dt-header-icon { display: grid; place-items: center; position: relative; flex: none; width: 44px; height: 44px; border: 1px solid transparent; border-radius: 12px; color: #b0c2d6; font-size: 21px; }
+.dt-header-icon:hover, .dt-header-icon.active { background: #71b7ed0d; border-color: #7cb7e327; color: #b7e2ff; }
+.dt-request-signal {
+  position: absolute; top: 0; right: -1px; display: grid; place-items: center;
+  min-width: 17px; height: 17px; padding: 0 3px; border: 2px solid #111c28; border-radius: 999px;
+  background: #6cc8fb; color: #092339; font-size: 9px; line-height: 1; font-weight: 750;
+}
+.dt-request-signal::before {
+  content: ''; position: absolute; inset: -3px; border: 1px solid #73cafa; border-radius: inherit;
+  opacity: 0; animation: dt-notification-ripple 2.4s ease-out infinite; pointer-events: none;
+}
+.dt-account { margin-left: 6px; padding-left: 14px; border-left: 1px solid #aacbec17; }
+.dt-account-button.btn { display: flex; align-items: center; gap: 8px; height: 44px; min-height: 44px; padding: 0 4px; border: 0; border-radius: 10px; color: #a2b6cc; box-shadow: none; background: transparent; }
+.dt-account-button img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; border: 1px solid #c4e5ff30; }
+.dt-account-menu { z-index: 55; margin-top: 14px; width: 192px; padding: 8px; border: 1px solid #b8d9f824; border-radius: 14px; color: #cfdeee; background: #172331; box-shadow: 0 16px 40px #0005; }
+.dt-account-menu a, .dt-account-menu button { min-height: 42px; border-radius: 8px; }
+.dt-site-header a:focus-visible, .dt-site-header button:focus-visible { outline: 2px solid #8ccfff; outline-offset: 3px; }
+@keyframes dt-notification-ripple { from { transform: scale(.85); opacity: .65; } 85%, to { transform: scale(1.8); opacity: 0; } }
+@media (max-width: 800px) {
+  .dt-site-header.navbar { gap: 12px; padding: 12px 16px; }
+  .dt-header-actions { gap: 5px; }
+  .dt-discover-link { display: none; }
+  .dt-account { margin-left: 0; padding-left: 8px; }
+}
+@media (max-width: 580px) {
+  .dt-site-header.navbar { flex-wrap: wrap; }
+  .dt-site-brand { gap: 8px; }
+  .dt-site-brand strong { font-size: 20px; }
+  .dt-site-brand img { width: 28px; height: 35px; }
+  .dt-header-actions { margin-left: auto; }
+  .dt-header-search { order: 3; width: 100%; margin: 0; min-height: 38px; }
+  .dt-account-button > svg { display: none; }
+  .dt-app-main { padding: 28px 12px 32px; }
+  .dt-app-main:has(.dt-auth-page) { padding-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .dt-request-signal::before { animation: none; } }
+.dt-chat-page-hidden .dt-request-signal::before { animation-play-state: paused; }

@@ -1,34 +1,16 @@
-import axios from 'axios';
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { addRequests } from '../utils/requestsSlice'
-import { BASE_URL } from '../utils/constants'
+import { useSelector } from 'react-redux';
 import RequestCard from './RequestCard';
 
 const Requests = () => {
   const requests = useSelector((store) => store.request);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests= async () => {
-    try {
-      const res = await axios.get( BASE_URL + "/user/requests/received",{
-        withCredentials: true,
-      });
-      dispatch(addRequests(res.data));
-    } catch (error) {error
-    }
-  };
-  if (requests==null) return;
+  // The persistent header loads and refreshes the shared list on every route.
+  if (requests==null) return <p className="text-center text-slate-400" role="status">Loading requests…</p>;
   if (requests.length == 0) return <div className="text-3xl font-mono pt-2 flex justify-center"><p>No Request !</p></div>;
   return (
     <div>
       <div className="text-3xl font-mono pt-2 flex justify-center"><p>Requests</p></div>
       {requests.map((user) => (
-        <RequestCard user={user.fromUserId} time={user.updatedAt} />
+        <RequestCard key={user._id} user={user.fromUserId} time={user.updatedAt} />
       ))}
     </div>
   );

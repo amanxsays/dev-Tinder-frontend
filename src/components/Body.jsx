@@ -6,6 +6,7 @@ import axios from 'axios'
 import { BASE_URL } from '../utils/constants'
 import { useDispatch, useSelector } from 'react-redux'
 import { addUser } from '../utils/userSlice'
+import '../styles/site.css'
 
 const Body = () => {
   const dispatch=useDispatch();
@@ -27,9 +28,10 @@ const Body = () => {
   }
 
   return (
-    <div>
+    <div className="dt-app-frame">
+        <div className="dt-app-backdrop" aria-hidden="true" />
         <NavBar/>
-        <div className='min-h-screen mt-15'><Outlet/></div>
+        <main className="dt-app-main"><Outlet/></main>
         <Footer/>
     </div>
   )

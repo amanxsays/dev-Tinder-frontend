@@ -13,8 +13,8 @@ const ResumePreview = ({ source, onClose }) => {
                     <p className="text-[11px] uppercase tracking-wider text-slate-500">Resume preview</p>
                     <h2 className="truncate text-sm font-semibold text-white" title={source.fileName}>{source.fileName}</h2>
                 </div>
-                {url && <a href={url} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs text-sky-300 hover:bg-white/5">Open in new tab</a>}
-                <button type="button" onClick={onClose} aria-label="Close resume preview" className="shrink-0 rounded-lg px-3 py-2 text-xs text-slate-300 hover:bg-white/10">
+                {url && <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-white/10 px-3 py-2 text-xs text-sky-300 hover:bg-white/5">Open in new tab</a>}
+                <button type="button" autoFocus onClick={onClose} aria-label="Close resume preview" className="min-h-11 shrink-0 rounded-lg px-3 py-2 text-xs text-slate-300 hover:bg-white/10">
                     <span className="md:hidden">Back to chat</span><span className="hidden md:inline">Close</span>
                 </button>
             </header>

@@ -1,213 +1,144 @@
-import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import { createSocketConnection } from "../utils/socket";
-import axios from "axios";
-import { AI_CHAT_ENABLED, BASE_URL } from "../utils/constants";
+import { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import { createSocketConnection } from '../utils/socket';
+import { BASE_URL } from '../utils/constants';
+import { normalizeMessage, messageTime } from '../utils/chatMessages';
+import { useChatExperience } from '../contexts/ChatExperienceContext';
+import { useChatScroll } from '../hooks/useChatScroll';
+import ChatShell from './chat/ChatShell';
+import ChatComposer from './chat/ChatComposer';
 
-const Chat = () => {
+function Avatar({ url, name }) {
+  return url ? <img className="dt-avatar" src={url} alt={name + ' avatar'} />
+    : <span className="dt-avatar dt-avatar-placeholder" aria-hidden="true">{name?.slice(0, 1) || '?'}</span>;
+}
+
+export default function Chat() {
   const { targetUserId } = useParams();
+  const userId = useSelector(store => store.user?._id) || '';
+  return <HumanChat key={userId + ':' + targetUserId} targetUserId={targetUserId} />;
+}
+
+function HumanChat({ targetUserId }) {
+  const user = useSelector(store => store.user);
+  const connections = useSelector(store => store.connection);
+  const { accountId, setDraft, runtime } = useChatExperience();
+  const owner = accountId + ':human:' + targetUserId;
+  const navigate = useNavigate();
+  const socketRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const user = useSelector((store) => store.user);
+  const [partner, setPartner] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [connection, setConnection] = useState('Connecting…');
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const { scrollRef, onScroll, showLatest, jumpToLatest } = useChatScroll(messages.length + ':' + loading);
   const userId = user?._id;
-  const photoUrl = user?.photoUrl;
-  const msg = useRef("");
-
-  // Assuming you have a specific ID or way to know if this is the AI chat
-  const isAIChat = targetUserId === "ai-agent"; // CHANGE THIS to whatever ID your AI uses
-
-  const fetchChat = async () => {
-    try {
-      const chat = await axios(BASE_URL + "/chat/" + targetUserId, {
-        withCredentials: true,
-      });
-
-      const chatMessages = chat?.data?.messages.map((msg) => {
-        return {
-          firstName: msg.senderId.firstName,
-          photoUrl: msg.senderId.photoUrl,
-          text: msg.text,
-          time: msg.updatedAt,
-        };
-      });
-      setMessages(chatMessages || []);
-    } catch (err) {
-      console.error("Failed to fetch chat", err);
-    }
-  };
 
   useEffect(() => {
-    if (isAIChat) return;
-    fetchChat();
-  }, [targetUserId, isAIChat]);
+    const known = connections?.find(person => person._id === targetUserId);
+    if (known) { setPartner(known); return; }
+    let disposed = false;
+    const controller = new AbortController();
+    axios.get(BASE_URL + '/profile/view/' + targetUserId, { withCredentials: true, signal: controller.signal, timeout: 15000 })
+      .then(response => { if (!disposed) setPartner(response.data); })
+      .catch(() => { /* History still identifies participants where available. */ });
+    return () => { disposed = true; controller.abort(); };
+  }, [targetUserId, connections]);
 
-  // Only connect to WebSocket if it's a human chat
   useEffect(() => {
-    if (!userId || isAIChat) return;
-    
+    if (!userId) return;
+    let disposed = false;
+    const controller = new AbortController();
     const socket = createSocketConnection();
-    socket.emit("joinChat", { userId, targetUserId });
-
-    socket.on("messageReceived", ({ firstName, text, photoUrl }) => {
-      setMessages((messages) => [...messages, { firstName, text, photoUrl, time: handleTime(new Date()) }]);
-    });
-
+    socketRef.current = socket;
+    setLoading(true);
+    setError('');
+    setMessages([]);
+    const joined = () => {
+      if (disposed) return;
+      socket.emit('joinChat', { userId, targetUserId });
+      setConnection('Connected');
+      setError(previous => previous.startsWith('Chat connection interrupted.') ? '' : previous);
+    };
+    const disconnected = () => {
+      if (disposed) return;
+      setConnection('Disconnected');
+      setError('Chat connection interrupted. Your unsent draft is preserved. Reconnect before sending.');
+    };
+    const received = payload => {
+      if (disposed) return;
+      const message = normalizeMessage({ ...payload, time: Date.now() }, userId);
+      setMessages(previous => [...previous, message]);
+    };
+    socket.on('connect', joined);
+    socket.on('disconnect', disconnected);
+    socket.on('connect_error', disconnected);
+    socket.on('messageReceived', received);
+    if (socket.connected) joined();
+    axios.get(BASE_URL + '/chat/' + targetUserId, {
+      withCredentials: true, signal: controller.signal, timeout: 15000,
+    }).then(response => {
+      if (disposed) return;
+      const history = (Array.isArray(response.data?.messages) ? response.data.messages : []).map(message => normalizeMessage(message, userId));
+      setMessages(previous => [...history, ...previous]);
+    }).catch(() => {
+      if (!disposed) setError('Could not load chat history. Retry explicitly; your draft is preserved.');
+    }).finally(() => { if (!disposed) setLoading(false); });
     return () => {
+      disposed = true; controller.abort();
+      socket.off('connect', joined);
+      socket.off('disconnect', disconnected);
+      socket.off('connect_error', disconnected);
+      socket.off('messageReceived', received);
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [userId, targetUserId, isAIChat]);
+  }, [userId, targetUserId, attempt]);
 
-  const handleAIStream = (query) => {
-    if (!AI_CHAT_ENABLED) return;
-
-    const jobId = crypto.randomUUID(); 
-    
-    // Add the 'id' field so we can target this exact bubble
-    setMessages((prev) => [...prev, { 
-        id: jobId, 
-        firstName: "Agentic AI", 
-        text: "Connecting to Agentic AI...", 
-        photoUrl: "https://cdn-icons-png.flaticon.com/512/4712/4712027.png", 
-        time: handleTime(new Date()),
-        isStatus: true 
-    }]);
-
-    const eventSource = new EventSource(`${BASE_URL}/chat/stream?jobId=${jobId}&query=${encodeURIComponent(query)}&userId=${userId}`);
-
-    // Update by matching the jobId
-    eventSource.addEventListener("status", (event) => {
-      setMessages((prev) => prev.map(msg => 
-        msg.id === jobId ? { ...msg, text: event.data } : msg
-      ));
-    });
-
-    // Final answer update
-    eventSource.addEventListener("message", (event) => {
-      setMessages((prev) => prev.map(msg => 
-        // Swap out the text and remove the pulsing status effect
-        msg.id === jobId ? { ...msg, text: event.data, isStatus: false } : msg
-      ));
-      eventSource.close(); 
-    });
-
-    eventSource.onerror = () => {
-      console.error("SSE Connection Error");
-      eventSource.close();
-    };
-  };
-
-  const handleSend = () => {
-    if (isAIChat && !AI_CHAT_ENABLED) return;
-
-    const textValue = msg.current.value;
-    if (!textValue.trim()) return;
-
-    // Immediately push the user's own message to the UI
-    setMessages((prev) => [...prev, { 
-        firstName: user.firstName, 
-        text: textValue, 
-        photoUrl, 
-        time: handleTime(new Date()) 
-    }]);
-    
-    msg.current.value = "";
-
-    // Route the message to either the AI Stream or the WebSockets
-    if (isAIChat) {
-      handleAIStream(textValue);
-    } else {
-      const socket = createSocketConnection();
-      socket.emit("sendMessage", {
-        firstName: user.firstName,
-        userId,
-        targetUserId,
-        text: textValue,
-        photoUrl,
-      });
+  const send = text => {
+    const socket = socketRef.current;
+    if (!user || !socket?.connected) {
+      setError('Chat is disconnected. Your draft has not been sent. Reconnect and press Send.');
+      return;
     }
+    if (!text.trim()) return;
+    runtime.release(owner);
+    runtime.clearStatus(owner);
+    socket.emit('sendMessage', { firstName: user.firstName, userId, targetUserId, text, photoUrl: user.photoUrl });
+    setDraft(owner, '');
+    setError('');
+    // Only room broadcasts insert live messages: no second optimistic copy.
+    // This legacy protocol has no persistence/recipient acknowledgement.
   };
-
-  const handleTime = (time) => {
-    if (typeof time === "string" && /^\d{2}:\d{2}$/.test(time)) return time;
-    const date = new Date(time);
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
-
-  return (
-    <>
-      <div className="bg-black m-10 mt-[11%] rounded-md p-2 min-h-screen">
-        <div className="flex flex-col min-h-screen bg-[#11132686] border-1 rounded-md border-gray-700">
-          <div className="bg-base-300 border-1 border-gray-500 p-2 rounded-t-md">
-            <p>Chat</p>
-          </div>
-          <div className="m-1">
-            {isAIChat && !AI_CHAT_ENABLED && (
-              <p className="p-3 text-gray-400" role="status">AI chat is currently unavailable.</p>
-            )}
-            {messages.map((mess, index) => {
-              return (
-                <div key={index}>
-                  {mess.firstName !== user.firstName ? (
-                    <div className="chat chat-start">
-                      <div className="chat-image avatar">
-                        <div className="w-10 rounded-full">
-                          <img alt="avatar" src={mess.photoUrl} />
-                        </div>
-                      </div>
-                      <div className="chat-header">
-                        {mess.firstName}
-                        <time className="text-xs opacity-50 ml-1">{handleTime(mess.time)}</time>
-                      </div>
-                      <div className={`chat-bubble whitespace-pre-wrap ${mess.isStatus ? "bg-gray-600 animate-pulse" : ""}`}>
-                          {mess.text}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="chat chat-end">
-                      <div className="chat-image avatar">
-                        <div className="w-10 rounded-full">
-                          <img alt="avatar" src={mess.photoUrl} />
-                        </div>
-                      </div>
-                      <div className="chat-header">
-                        {mess.firstName}
-                        <time className="text-xs opacity-50 ml-1">
-                          {handleTime(mess.time)}
-                        </time>
-                      </div>
-                      <div className="chat-bubble">{mess.text}</div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <form
-            className="bg-gray-600 flex justify-between rounded-md mt-auto"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-          >
-            <fieldset className="fieldset p-0 m-0 w-full">
-              <input
-                ref={msg}
-                type="text"
-                className="input w-full"
-                placeholder={isAIChat && !AI_CHAT_ENABLED ? "AI chat is unavailable" : "Type a message"}
-                disabled={isAIChat && !AI_CHAT_ENABLED}
-              />
-            </fieldset>
-            <button disabled={isAIChat && !AI_CHAT_ENABLED} className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] w-20 my-auto rounded-l-none">
-              Send
-            </button>
-          </form>
-        </div>
+  const partnerName = partner ? [partner.firstName, partner.lastName].filter(Boolean).join(' ') : 'Conversation';
+  return <div className="dt-chat-surface">
+    <ChatShell title={partnerName} subtitle="DevTinder · Direct message"
+      identity={<Avatar url={partner?.photoUrl} name={partnerName} />} onBack={() => navigate('/connections')}
+      composer={<ChatComposer owner={owner} onSend={send} disabled={loading || !userId} />}>
+      <div ref={scrollRef} onScroll={onScroll} className="dt-chat-scroll">
+        {loading && <p className="dt-human-empty" role="status">Loading conversation…</p>}
+        {!loading && !messages.length && <div className="dt-human-empty"><h2>Start a conversation</h2><p>Say hello with a message, or dictate a draft.</p></div>}
+        {error && <div className="dt-reasoning" role="status"><p className="dt-error">{error}</p>
+          <button type="button" className="dt-text-button" onClick={() => setAttempt(previous => previous + 1)}>Reconnect and reload history</button></div>}
+        <p className="sr-only" role="status">Chat connection: {connection}</p>
+        {messages.map(message => {
+          // Historical IDs are reliable. Legacy live events only provide display names.
+          const own = message.own ?? message.firstName === user?.firstName;
+          return <article key={message.id} className={'dt-message-row' + (own ? ' dt-message-row--own' : '')}>
+            {!own && <Avatar url={message.photoUrl} name={message.firstName} />}
+            <div className="dt-message-content">
+              <div className="dt-message-meta"><span>{own ? 'You' : message.firstName}</span>
+                {message.time && <time dateTime={message.time.toISOString()}>{messageTime(message.time)}</time>}</div>
+              <div className={'dt-bubble' + (own ? ' dt-bubble--own' : '')} style={{ whiteSpace: 'pre-wrap' }}>{message.text}</div>
+            </div>
+            {own && <Avatar url={message.photoUrl} name={message.firstName} />}
+          </article>;
+        })}
       </div>
-    </>
-  );
-};
-
-export default Chat;
+      {showLatest && <button type="button" className="dt-latest" onClick={jumpToLatest}>Jump to latest ↓</button>}
+    </ChatShell>
+  </div>;
+}
