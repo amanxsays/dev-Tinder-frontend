@@ -1,201 +1,200 @@
-# DevTinder — Frontend
+# DevTinder Frontend
 
-React 19 + Vite single-page app for **DevTinder**. Swipe-style developer matching, real-time chat, resume upload, and a global AI recruiter chat drawer backed by the [integration-service](../integration-service).
+DevTinder's React application for discovering developers, managing connections, sharing resumes, and chatting with people or an AI recruiter.
 
-## Tech stack
+This repository is the frontend. The Express API and Spring Boot integration service remain separate repositories.
 
-| Concern | Choice |
-|---|---|
-| Framework | React 19 + Vite 7 |
-| Routing | React Router DOM v7 (`BrowserRouter`) |
-| State | Redux Toolkit (`user`, `feed`, `connection`, `request` slices) |
-| Styling | Tailwind CSS v4 + daisyUI |
-| Animation | Framer Motion (swipe cards, AI drawer) |
-| Real-time | `socket.io-client` |
-| Notifications | react-toastify |
+## Features
 
-## Architecture
+- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout.
+- **Developer discovery:** swipeable candidate cards, connection requests, accepted connections, and GitHub, Codeforces, and LeetCode statistics.
+- **Request notifications:** the header loads pending requests after sign-in, shows a count with a gentle ripple, and refreshes on navigation, focus, reconnecting online, and every minute while visible. Reviewing requests updates the shared list and badge.
+- **Human chat:** real-time text messaging over Socket.IO, with persisted history loaded from the backend.
+- **AI recruiter:** a signed-in-only side panel with a fixed animated glass-globe launcher. The dedicated AI route opens the same conversation. Received task updates show a ripple on the current task; completed steps stay still.
+- **Voice dictation:** optional English speech-to-text in both chats, with editable drafts and explicit sending.
+- **Read aloud:** optional browser speech playback for completed AI answers.
+- **Resumes:** upload, replace, and remove PDFs; inspect validated resume citations beside an AI conversation on desktop or in an overlay on mobile.
+- **Visual design:** dark navy backgrounds, subtle geometric detail, a responsive header, compact chat composers, keyboard focus states, and reduced-motion support.
+
+## Stack and architecture
+
+| Area | Technology |
+| --- | --- |
+| Application | React 19, Vite 7, React Router 7 |
+| State | Redux Toolkit and React context for transient chat state |
+| Styling | Tailwind CSS 4, daisyUI, scoped CSS |
+| Animation | Framer Motion for swipe cards; SVG/CSS for chat decoration |
+| Networking | Axios, Fetch with SSE parsing, Socket.IO client |
+| Feedback | react-toastify |
+| Voice | Browser speech recognition and speech synthesis; no additional voice provider |
 
 ```mermaid
 flowchart LR
-    subgraph FE["dev-Tinder-frontend (React + Vite)"]
-        Router["React Router"]
-        Store["Redux Store<br/>user / feed / connection / request"]
-        Comp["Components"]
-        Hook["useAgenticChat"]
-        Sock["socket.io-client"]
-    end
+    Frontend["React frontend"]
+    Backend["Express API + Socket.IO"]
+    Integration["Spring Boot integration service"]
+    Cloudinary["Cloudinary"]
+    Speech["Browser speech APIs"]
 
-    BE["dev-Tinder-backend<br/>(Express API + Socket.IO)"]
-    Java["integration-service<br/>(Java/Spring — AI chat + stats)"]
-    Cloud["Cloudinary"]
-
-    Comp --> Router
-    Comp --> Store
-    Comp -- "axios (cookie auth)<br/>VITE_API_URL" --> BE
-    Sock <-- "chat events" --> BE
-    Comp -- "resume PDF (signed upload)" --> Cloud
-    Hook -- "POST /api/chat/stream (SSE)<br/>VITE_STATS_SERVICE_URL" --> Java
+    Frontend <-->|"Cookie-authenticated API / human chat"| Backend
+    Frontend <-->|"AI query / SSE statuses and answer"| Integration
+    Backend -->|"Stats proxy / resume ingestion"| Integration
+    Frontend -->|"Signed resume upload"| Cloudinary
+    Frontend -->|"Dictation / optional Read aloud"| Speech
 ```
 
-The "AI Recruiter" chat drawer uses `VITE_STATS_SERVICE_URL` to reach the integration service. Local development forwards SSE through Vite's `/integration-api` proxy; production connects to the configured service directly. Stats are fetched through the Node backend's `/stats` proxy.
+The integration service owns AI orchestration and its Gemini, Redis, MongoDB, and Pinecone integrations. Service setup is documented in its own repository.
 
-## App structure
+### Development and production URLs
 
-```mermaid
-flowchart TD
-    Main["main.jsx"] --> App["App.jsx"]
-    App --> Provider["Redux Provider"]
-    Provider --> BR["BrowserRouter"]
-    BR --> AiDrawer["AiDrawerLayout<br/>(AI chat, on every page)"]
-    AiDrawer --> Body["Body (layout)"]
-    Body --> NavBar
-    Body --> Outlet["Route Outlet"]
-    Body --> Footer
+| Traffic | Development | Production |
+| --- | --- | --- |
+| HTTP API | Vite `/api` proxy to `VITE_API_URL` | Direct to `VITE_API_URL` |
+| AI SSE | Vite `/integration-api` proxy to `VITE_STATS_SERVICE_URL` | Direct to `VITE_STATS_SERVICE_URL` |
+| Human WebSockets | Direct to `VITE_API_URL` | Direct to `VITE_API_URL` |
+| Developer statistics | Backend `/stats` endpoint | Backend `/stats` endpoint |
 
-    Outlet --> Feed["/  → Feed + UserCard"]
-    Outlet --> Login["/login → Login (+OTP)"]
-    Outlet --> Profile["/profile → Profile + ResumeSection"]
-    Outlet --> ViewProfile["/profile/:userId → ViewProfile"]
-    Outlet --> Connections["/connections"]
-    Outlet --> Requests["/requests"]
-    Outlet --> Chat["/chat/:targetUserId"]
-```
+The local HTTP proxies preserve cookies and avoid cross-port browser preflights. They are development-server features, not part of the production build.
 
-## Key user flow: swipe → connect → chat
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant Feed as Feed / UserCard
-    participant BE as Backend API
-    participant Sock as Socket.IO
-
-    Feed->>BE: GET /user/feed
-    BE-->>Feed: candidate list
-    U->>Feed: swipe right (interested)
-    Feed->>BE: POST /request/send/interested/:id
-    Note over BE: other user accepts via Requests screen
-
-    U->>BE: GET /user/connections
-    U->>Sock: navigate to /chat/:targetUserId
-    Sock->>Sock: joinChat (verified: accepted connection)
-    U->>Sock: sendMessage
-    Sock-->>U: messageReceived (real-time)
-```
-
-## Components (`src/components/`)
-
-| Component | Purpose |
-|---|---|
-| `Body.jsx` | Root layout; restores session from cookie on mount, redirects to login if unauthenticated |
-| `NavBar.jsx` | Top nav, pending-request indicator, logout |
-| `Footer.jsx` | Static footer |
-| `Login.jsx` + `OtpCoundown.jsx` | Combined login/signup with OTP verification |
-| `Feed.jsx` + `UserCard.jsx` | Swipeable candidate stack (Framer Motion), on-demand GitHub/Codeforces/LeetCode stats |
-| `Requests.jsx` / `RequestCard.jsx` | Incoming connection requests — accept/reject |
-| `Connections.jsx` / `ConnectionCard.jsx` | Accepted connections list |
-| `Profile.jsx` / `ProfileEdit.jsx` | Profile editing |
-| `ResumeSection.jsx` | Direct-to-Cloudinary resume upload; triggers backend ingestion webhook |
-| `ViewProfile.jsx` | Read-only profile view of another user |
-| `Chat.jsx` | 1:1 real-time chat over Socket.IO |
-| `AiDrawerLayout.jsx` | Global AI recruiter chat drawer (streams from integration-service) |
-| `Toast.jsx` | Toast notification container |
-
-## State (`src/utils/`)
-
-| File | Purpose |
-|---|---|
-| `appStore.js` | Redux Toolkit store combining all slices |
-| `userSlice.js`, `feedSlice.js`, `connectionsSlice.js`, `requestsSlice.js` | Simple `add*`/`remove*` reducers; data fetching happens in components via axios |
-| `constants.js` | `BASE_URL` from `VITE_API_URL` |
-| `socket.js` | `createSocketConnection()` — Socket.IO client factory |
-
-## Run guide
+## Local development
 
 ### Prerequisites
-- Node.js 18+
-- [dev-Tinder-backend](../dev-Tinder-backend) running (default `http://localhost:7777`)
-- (Optional, for the AI chat drawer) [integration-service](../integration-service) running on `http://localhost:8080`
 
-### 1. Install
+- Node.js **20.19+ on the 20.x line, or 22.12+**, as required by Vite 7.
+- The `dev-Tinder-backend` API, normally at `http://localhost:7777`.
+- For enabled AI chat, a running `integration-service`, normally at `http://localhost:8080`.
 
-```bash
+Start the backend and integration service separately using their respective READMEs. Starting Docker Desktop alone does not start the integration service.
+
+### Install and configure
+
+From the workspace containing the three repositories:
+
+```powershell
 cd dev-Tinder-frontend
-npm install
+npm ci
+
+# Preserve an existing local configuration.
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-### 2. Configure environment
-
-Create a `.env` file in `dev-Tinder-frontend/` with:
+Configure the frontend's `.env`:
 
 ```env
 VITE_API_URL=http://localhost:7777
 VITE_STATS_SERVICE_URL=http://localhost:8080
-VITE_AI_CHAT_ENABLED=false
+VITE_AI_CHAT_ENABLED=true
 ```
 
-Local HTTP API calls use `/api` on the Vite server, which forwards requests to
-`VITE_API_URL` and preserves authentication cookies. This avoids browser CORS
-preflights between ports 5173 and 7777 for profile saving and resume updates.
-Restart Vite after changing the proxy target. Production builds use
-`VITE_API_URL` directly; human-chat WebSockets also connect to that URL directly.
+Use service base URLs without endpoint suffixes. Set `VITE_AI_CHAT_ENABLED=false` if the integration service is not being used.
 
-AI chat uses `VITE_STATS_SERVICE_URL`. Start the integration service separately:
-Docker Desktop alone does not start it. Verify `http://localhost:8080/api/ping`
-before sending a chat request. On Netlify, set this variable to the deployed
-integration service's HTTPS base URL and rebuild; localhost refers to the visitor's
-own computer.
+Only the exact value `true` enables AI chat. A false or missing flag hides the launcher and blocks frontend AI queries, while human chat remains available. AI chat is also unavailable until the existing cookie session resolves to a signed-in account.
 
-AI chat is enabled only when `VITE_AI_CHAT_ENABLED` is exactly `true`. With
-`false` or a missing value, the AI drawer is hidden and both frontend AI chat
-request paths are blocked. Human chat remains available. Restart Vite after
-changing your local `.env`.
+`VITE_*` values are public browser configuration. Keep Gemini, database, Redis, Cloudinary signing, and other secret credentials in the server services, not here. Local `.env` files are ignored by Git.
 
-On Netlify, add `VITE_AI_CHAT_ENABLED` in **Project configuration > Environment
-variables**, make it available to the build, and set its production value to
-`true` to enable chat or `false` to disable it. Trigger a new build and deploy
-after each change: Vite embeds the flag into the generated JavaScript, so it
-cannot change a deployment that is already built. Existing open tabs need to
-reload to receive the new version.
+### Start
 
-This flag controls the frontend only. Direct requests to the integration-service
-API and other LLM features, such as resume embeddings, require server-side
-controls to enforce a spending limit.
-
-### Resume previews in AI chat
-
-AI answers now include resume source metadata from the integration service.
-Click a blue resume citation or a **Resumes used** button to view the PDF beside
-the chat on desktop. On mobile the preview fills the panel; **Back to chat**
-returns to the conversation. The preview also includes **Open in new tab** for
-browsers that cannot embed the PDF. Opening a resume does not call the LLM.
-
-Deploy the frontend, Node backend and integration service together, then reload.
-Resume replacement saves a new version ID before retiring the old file, Mongo
-chunks and Pinecone vectors. Removing a resume also removes its search data.
-Only the current version can supply context or citations for new AI answers.
-Existing chat answers are checked when opening the drawer, regaining focus,
-every 30 seconds while the drawer is open, and before opening a PDF. An answer
-using a retired resume is cleared with a request to ask again for current
-information. These checks and deletions make no LLM or embedding calls; indexing
-the newly uploaded PDF still makes embedding calls.
-
-Run the proxy, citation and streaming regression checks with
-`node --test tests/apiProxy.test.mjs tests/resumeSources.test.mjs tests/sseParser.test.mjs`.
-
-### 3. Run
-
-```bash
+```sh
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:5173` by default.
+Open `http://localhost:5173` by default. Restart Vite after changing environment variables. For local AI connectivity, check the integration service's `/api/ping` endpoint before sending a query.
 
-### 4. Other scripts
+## Chat and voice behavior
 
-```bash
-npm run build     # production build to dist/
-npm run preview   # preview the production build locally
-npm run lint      # eslint
-```
+### Text and drafts
+
+Human chat uses the existing authenticated `GET /chat/:targetUserId` history endpoint and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. AI chat posts `{ query, userId }` to `/api/chat/stream` and consumes its existing SSE events.
+
+- Enter sends; Shift+Enter inserts a newline.
+- Drafts are separate for each conversation and stay in memory.
+- Closing the AI panel preserves its conversation and pending query; reopening does not resubmit it.
+- Logout, account changes, or a reload clear transient drafts and the AI transcript. Human message history remains on the backend.
+- Opening an existing answer or resume preview does not issue another AI query.
+- The notification count represents **pending connection requests**, not unread chat messages. Refreshing it uses the existing HTTP endpoint; it is not an instant push-notification channel.
+
+### Dictation and playback
+
+1. Click the microphone to start English (`en-IN`) dictation.
+2. Stop and review the confirmed transcript, or Cancel to restore the original draft.
+3. Edit the text and explicitly Send.
+
+Capture ends after at most 60 seconds, or earlier if the browser ends recognition. Stopping, silence, or recognition completion never sends a message automatically. Typing remains available when speech recognition is unsupported or fails.
+
+Desktop Chrome and Android Chrome are the primary browser targets. Brave can expose speech APIs while its recognition service is unavailable; the UI offers Chrome or device-keyboard dictation as fallbacks. Recognition requires HTTPS or localhost and microphone permission. The browser may process speech remotely.
+
+**Read aloud** is available on completed successful AI answers when browser synthesis is supported. It speaks prose and descriptive link labels, omitting fenced code, raw URLs, internal resume identifiers, and separate citation lists. Starting dictation, closing the panel, navigating away, backgrounding, or logging out stops playback.
+
+DevTinder sends dictated messages through the existing **text** contracts. It does not upload or persist voice recordings.
+
+### Resume previews
+
+Click a resume citation or a source button to preview its PDF. Desktop previews appear to the left of the AI conversation; mobile previews overlay it. The preview supports returning to chat and opening the file in a new tab.
+
+Source validity is checked when opening the panel, regaining focus, every 30 seconds while open, and before opening a PDF. Resume-change events also invalidate affected answers. Retired sources are removed from those answers and open previews, with a prompt to ask again.
+
+These validity checks make no AI-generation or embedding calls. Uploading and indexing a new PDF still uses the integration service's embedding pipeline.
+
+## Routes
+
+| Route | Screen |
+| --- | --- |
+| `/login` | Login, signup, and OTP verification |
+| `/` | Developer feed |
+| `/profile` | Own profile and resume management |
+| `/profile/:userId` | Another developer's profile |
+| `/requests` | Pending connection requests |
+| `/connections` | Accepted connections |
+| `/chat/:targetUserId` | Human conversation |
+| `/chat/ai-agent` | Shared AI recruiter panel; signed-out users return to login |
+
+## Important files
+
+| Path | Responsibility |
+| --- | --- |
+| `src/App.jsx` | Providers and routes |
+| `src/components/Body.jsx`, `NavBar.jsx` | Session restoration, app shell, navigation, request refresh, logout |
+| `src/components/Login.jsx`, `OtpCoundown.jsx` | Login/signup/OTP flow |
+| `src/components/Feed.jsx`, `UserCard.jsx` | Discovery, swiping, platform statistics |
+| `src/components/Requests.jsx`, `RequestCard.jsx` | Shared request list and accept/reject actions |
+| `src/components/Chat.jsx` | Human history and socket lifecycle |
+| `src/components/AiDrawerLayout.jsx` | AI panel, conversation, citations, preview validation |
+| `src/components/ResumeSection.jsx`, `ResumePreview.jsx` | Resume management and PDF preview |
+| `src/components/chat/` | Shared shell, composer, globe, Markdown, task status, and chat provider |
+| `src/contexts/ChatExperienceContext.js` | Shared transient chat experience context |
+| `src/hooks/useAgenticChat.js` | SSE lifecycle, cancellation, and error handling |
+| `src/hooks/useVoiceDictation.js`, `useReadAloud.js`, `useChatScroll.js` | Speech and conversation scrolling |
+| `src/utils/speechRuntime.js`, `speechText.js`, `chatMessages.js` | Speech ownership, readable text, and message normalization |
+| `src/utils/appStore.js`, `*Slice.js` | Redux account/feed/connection/request state |
+| `src/utils/constants.js`, `socket.js` | API targets, AI flag, Socket.IO factory |
+| `src/styles/auth.css`, `site.css`, `chat.css` | Authentication, application chrome, and chat styling |
+| `vite.config.js` | React/Tailwind plugins and local proxies |
+
+## Scripts and verification
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Vite development server |
+| `npm test` | Dependency-free tests using Node's built-in test runner |
+| `npm run build` | Production output in `dist/` |
+| `npm run preview` | Local preview of the production build |
+| `npm run lint` | Repository-wide ESLint checks |
+
+Tests cover local API/SSE proxies, stream parsing, resume references and safe preview URLs, message normalization, dictation ownership/cancellation/error handling, and spoken-text conversion/playback.
+
+Real microphone permissions, browser recognition services, native speech voices, and two-user/live-provider flows also need browser testing. Utility tests do not establish those external services' availability. Repository-wide lint contains existing findings in older components.
+
+## Deployment notes
+
+The frontend is deployed on Netlify. Build with `npm run build` and publish `dist`. The existing `public/_redirects` provides the single-page application fallback needed for direct route navigation.
+
+Configure production `VITE_API_URL` and `VITE_STATS_SERVICE_URL` with the services' HTTPS base URLs. Never use localhost for a public deployment: it refers to each visitor's own computer. Backend cookie/CORS and Socket.IO origin settings must allow the frontend origin.
+
+Vite embeds the environment values and AI flag at build time. A changed value requires a new build; open browser tabs must reload to receive it. The AI flag and signed-in UI gate control this frontend's behavior, not authorization or spending limits on direct integration-service requests.
+
+## Feature documentation
+
+- [Chat UI and voice requirements](docs/chat-voice-ui/requirements.md)
+- [Implementation plan and subsequent UI decisions](docs/chat-voice-ui/implementation-plan.md)
+
+The implementation plan's follow-up sections record the later approvals: side-panel presentation, fixed glass globe, current-task ripples, signed-in-only AI access, and the refreshed app header/background.
