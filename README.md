@@ -56,6 +56,14 @@ The integration service owns AI orchestration and its Gemini, Redis, MongoDB, an
 
 The local HTTP proxies preserve cookies and avoid cross-port browser preflights. They are development-server features, not part of the production build.
 
+### Integration service warm-up
+
+When the frontend opens, it sends one non-blocking `GET /api/ping` to the integration service, including before login. Development uses the existing `/integration-api` proxy; production uses `VITE_STATS_SERVICE_URL`. A missing production service URL skips the request.
+
+The ping starts independently of the AI feature flag because developer statistics also use Spring. It sends no authentication cookies or request body, invokes no AI endpoint, and does not delay rendering or sign-in. Duplicate callers share one attempt per service URL per page load; navigation does not repeat it. There is no polling or automatic retry, failures stay silent, and a stalled request is aborted after two minutes.
+
+This is a best-effort wake-up, not a readiness check: the browser does not inspect the cross-origin response. It overlaps a Render cold start with browsing; opening AI chat immediately can still encounter startup delay, and the service can sleep again after inactivity.
+
 ## Local development
 
 ### Prerequisites
@@ -167,6 +175,7 @@ These validity checks make no AI-generation or embedding calls. Uploading and in
 | `src/utils/speechRuntime.js`, `speechText.js`, `chatMessages.js` | Speech ownership, readable text, and message normalization |
 | `src/utils/appStore.js`, `*Slice.js` | Redux account/feed/connection/request state |
 | `src/utils/constants.js`, `socket.js` | API targets, AI flag, Socket.IO factory |
+| `src/utils/integrationWarmup.js` | One-time, non-blocking Spring health ping on frontend startup |
 | `src/styles/auth.css`, `site.css`, `chat.css` | Authentication, application chrome, and chat styling |
 | `vite.config.js` | React/Tailwind plugins and local proxies |
 
