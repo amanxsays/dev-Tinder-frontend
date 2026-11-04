@@ -2,6 +2,8 @@
 
 The Android application bundles the same React UI as the website through Capacitor. The native project lives in `android/`; Netlify still builds `dist/`, independently of APK builds. No production API, database, Firebase project, or hosting service is created by adding the Android source.
 
+Start with the [morning review checklist](MORNING-CHECKLIST.md) for completed verification, the current debug APK, and owner/device tasks still pending.
+
 ## Requirements
 
 - Node 22+, npm, Android Studio 2025.2.1 or later, Android SDK Platform 36 and Build Tools 36.

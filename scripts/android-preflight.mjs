@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from 'vite';
 
@@ -48,7 +48,8 @@ export function checkAndroidSetup({ root, env = {}, debug = false,
       add(present, `${key}: ${present ? 'set' : 'missing; supply through the release environment'}`);
     }
     if (env.DEVTINDER_KEYSTORE_PATH?.trim()) {
-      add(isFile(resolve(root, env.DEVTINDER_KEYSTORE_PATH)), 'Release keystore: must be an existing file');
+      const absolute = isAbsolute(env.DEVTINDER_KEYSTORE_PATH);
+      add(absolute && isFile(env.DEVTINDER_KEYSTORE_PATH), 'Release keystore: must be an absolute path to an existing file');
     }
   }
   return { ok: checks.every(check => check.ok), checks };

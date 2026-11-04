@@ -16,7 +16,7 @@ Create a release keystore only when the release owner is ready to retain and bac
 
 Set process-local values (do not paste secrets into shell history or documentation):
 
-- `DEVTINDER_KEYSTORE_PATH`
+- `DEVTINDER_KEYSTORE_PATH` - absolute path to the existing keystore, outside Git
 - `DEVTINDER_KEYSTORE_PASSWORD`
 - `DEVTINDER_KEY_ALIAS`
 - `DEVTINDER_KEY_PASSWORD`
@@ -30,6 +30,8 @@ npm run android:release
 Run `npm run android:check` first for a local configuration report. It exits nonzero when required inputs are absent. It does not contact Firebase, upload anything, validate private-key credentials, or replace artifact signing and real-device verification.
 
 The Gradle release task deliberately fails without production Firebase configuration or explicit signing values. Verify the signed artifact with Android Build Tools `apksigner verify --print-certs`, record its SHA-256 checksum, and test an upgrade over the prior signed build without uninstalling.
+
+On Windows, `npm run android:inspect` verifies the existing debug APK signature, reports its compiled identity/permissions and SHA-256, and scans bundled text assets for private-key, Mongo URI, and known fixture-session patterns. It reads files only. For a release APK use `npm.cmd run android:inspect -- -Apk android/app/build/outputs/apk/release/app-release.apk`. Configure `ANDROID_HOME` and Java first. Review the certificate digest against the intended signing identity; passing this targeted check alone does not make an APK production-ready.
 
 ## APK distribution first
 

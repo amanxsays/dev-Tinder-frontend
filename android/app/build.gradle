@@ -30,6 +30,9 @@ android {
         release {
             def signingPath = System.getenv('DEVTINDER_KEYSTORE_PATH')
             if (signingPath) {
+                if (!new File(signingPath).isAbsolute()) {
+                    throw new GradleException('DEVTINDER_KEYSTORE_PATH must be absolute so preflight and Gradle use the same keystore.')
+                }
                 storeFile file(signingPath)
                 storePassword System.getenv('DEVTINDER_KEYSTORE_PASSWORD')
                 keyAlias System.getenv('DEVTINDER_KEY_ALIAS')

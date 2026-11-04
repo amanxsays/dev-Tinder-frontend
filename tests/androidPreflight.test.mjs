@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
 import { checkAndroidSetup } from '../scripts/android-preflight.mjs';
 
 const root = process.cwd();
@@ -46,11 +47,12 @@ test('cleartext loopback is debug-only; credentials, query and fragments are rej
 test('release requires all signing inputs and an existing keystore', () => {
   const options = { debug: false, readJson: () => firebase('com.amanxsays.devtinder') };
   assert.equal(run(options).ok, false);
-  const signing = { ...env, DEVTINDER_KEYSTORE_PATH: 'fixture.jks', DEVTINDER_KEYSTORE_PASSWORD: 'secret',
+  const signing = { ...env, DEVTINDER_KEYSTORE_PATH: resolve(root, 'fixture.jks'), DEVTINDER_KEYSTORE_PASSWORD: 'secret',
     DEVTINDER_KEY_ALIAS: 'release', DEVTINDER_KEY_PASSWORD: 'secret' };
   const result = run({ ...options, env: signing });
   assert.equal(result.ok, true);
   assert.doesNotMatch(JSON.stringify(result), /secret/);
   assert.equal(run({ ...options, env: signing, isFile: path => !path.endsWith('.jks') }).ok, false);
   assert.equal(run({ ...options, env: { ...signing, VITE_API_URL: 'http://10.0.2.2' } }).ok, false);
+  assert.equal(run({ ...options, env: { ...signing, DEVTINDER_KEYSTORE_PATH: 'fixture.jks' } }).ok, false);
 });

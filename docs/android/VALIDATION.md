@@ -61,6 +61,8 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 
 ## Repeatable local commands
 
+The follow-up regression run passed all 68 frontend tests, 34 backend tests, and 67 isolated Spring tests, plus the normal web build and focused setup-script lint. Gradle rejected a relative release keystore path with the intended message and then passed its normal JVM task with the invalid test setting removed. The Windows APK inspector passed on the debug artifact (package `.debug`, minimum API 26, target API 36); its signature and eight bundled text assets were checked. The asset scan is targeted rather than an exhaustive secret audit. Current artifact details and remaining owner checks are in [MORNING-CHECKLIST.md](MORNING-CHECKLIST.md).
+
 Run `npm test` in frontend and Node backend, and `npm run build` in frontend.
 For Android, build a development bundle using explicitly selected isolated endpoints,
 run `npx cap sync android`, then the four Gradle tasks listed above. SDK location
