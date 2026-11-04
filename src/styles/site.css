@@ -76,3 +76,11 @@
 }
 @media (prefers-reduced-motion: reduce) { .dt-request-signal::before { animation: none; } }
 .dt-chat-page-hidden .dt-request-signal::before { animation-play-state: paused; }
+
+.dt-session-status { max-width: 440px; margin: 7vh auto; padding: 32px; border: 1px solid #b7d7f222; border-radius: 20px; background: #14202deb; box-shadow: 0 18px 50px #0003; }
+.dt-session-eyebrow { color: #86a8c6; font-size: 10px; letter-spacing: .14em; }
+.dt-session-status h1 { font-size: 25px; margin: 10px 0 12px; letter-spacing: -.025em; }
+.dt-session-status p[role="status"] { color: #aebfd1; font-size: 14px; line-height: 1.7; }
+.dt-session-status > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.dt-session-status button { min-height: 44px; padding: 10px 16px; border: 1px solid #9bc7e83d; border-radius: 10px; background: #2a526d40; color: #d7edfd; cursor: pointer; }
+.dt-session-status button:focus-visible { outline: 2px solid #8ccfff; outline-offset: 3px; }

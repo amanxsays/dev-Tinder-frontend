@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_CHAT_ENABLED, AI_SERVICE_URL } from '../utils/constants';
 import { createSseParser } from '../utils/sseParser';
 import { getResumeUrl } from '../utils/resumeSources';
+import { ensureIntegrationReady } from '../utils/integrationWarmup';
 
 export const useAgenticChat = () => {
   const [aiResponse, setAiResponse] = useState('');
@@ -20,10 +21,10 @@ export const useAgenticChat = () => {
     requestRef.current = controller;
     const current = () => requestRef.current === controller;
     let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 130000);
+    let timer;
     setIsAiThinking(true);
     setAiResponse('');
-    setAiStatus('Connecting to AI recruiter…');
+    setAiStatus('Waiting for AI service to be ready…');
     let text = '';
     let sources = [];
     let kind = 'answer';
@@ -36,6 +37,11 @@ export const useAgenticChat = () => {
     };
     try {
       if (!AI_SERVICE_URL) throw new Error('AI service is not configured.');
+      await ensureIntegrationReady(AI_SERVICE_URL, { signal: controller.signal });
+      if (!current() || controller.signal.aborted) return false;
+      setAiStatus('Connecting to AI recruiter…');
+      // The answer budget starts only after the separate startup wait completes.
+      timer = setTimeout(() => { timedOut = true; controller.abort(); }, 130000);
       const response = await fetch(AI_SERVICE_URL + '/api/chat/stream', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, userId }), signal: controller.signal,

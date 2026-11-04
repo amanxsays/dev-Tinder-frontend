@@ -9,6 +9,7 @@ import { removeFeed } from "../utils/feedSlice";
 import { FiBell, FiSearch, FiUsers, FiChevronDown } from "react-icons/fi";
 import { removeConnections } from "../utils/connectionsSlice";
 import { addRequests, removeAllRequests } from "../utils/requestsSlice";
+import { forgetSession } from "../utils/sessionHint";
 
 const NavBar = () => {
   const dispatch = useDispatch();
@@ -16,7 +17,9 @@ const NavBar = () => {
   const user = useSelector(state => state.user);
   const requests = useSelector(state => state.request);
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const searchQuery = pathname === '/discover' ? new URLSearchParams(search).get('q') || '' : '';
+  const searchDevelopers = query => navigate('/discover' + (query ? '?q=' + encodeURIComponent(query) : ''), { replace: pathname === '/discover' });
   const accountId = user?._id;
   const pendingCount = Array.isArray(requests) ? requests.length : 0;
 
@@ -59,6 +62,7 @@ const NavBar = () => {
   const handleLogout = async () => {
     try {
       await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
+      forgetSession();
       dispatch(removeUser());
       dispatch(removeFeed());
       dispatch(removeConnections());
@@ -81,12 +85,12 @@ const NavBar = () => {
         <span><strong>DevTinder</strong><small>DEVELOPER NETWORK</small></span>
       </Link>
       {accountId && <>
-        <label className="dt-header-search">
+        <form className="dt-header-search" role="search" onSubmit={event => { event.preventDefault(); searchDevelopers(searchQuery); }}>
           <FiSearch aria-hidden="true" />
-          <input type="text" placeholder="Search" aria-label="Search developers" />
-        </label>
+          <input type="search" placeholder="Search developers" aria-label="Search developers" maxLength={80} value={searchQuery} onChange={event => searchDevelopers(event.target.value)} />
+        </form>
         <nav className="dt-header-actions" aria-label="Main navigation">
-          <NavLink to="/" end className="dt-discover-link">Discover</NavLink>
+          <NavLink to="/discover" className="dt-discover-link">Discover</NavLink>
           <NavLink to="/requests" className="dt-header-icon dt-requests-link" aria-label={requestLabel} title={requestLabel}>
             <FiBell aria-hidden="true" />
             {pendingCount > 0 && <span className="dt-request-signal" aria-hidden="true">{pendingCount > 99 ? '99+' : pendingCount}</span>}

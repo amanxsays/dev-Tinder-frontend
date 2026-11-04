@@ -58,6 +58,7 @@
 .dt-auth-card .input::placeholder { color: #9bacc0; }
 .dt-auth-card .btn { color: #f4f8ff; border-color: #82b9fa40; }
 .dt-auth-card .input:focus-visible { outline: 2px solid #72b8ef; outline-offset: 2px; }
+.dt-auth-wait { width: 100%; color: #aac0d6; font-size: 12px; line-height: 1.6; text-align: center; }
 
 @media (max-width: 600px) {
   .dt-auth-backdrop::before { background-size: 48px 48px; opacity: .6; }

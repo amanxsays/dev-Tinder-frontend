@@ -3,7 +3,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { rememberSession, sessionReturnPath } from "../utils/sessionHint";
 import { BASE_URL } from "../utils/constants"
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import { PiPasswordBold } from "react-icons/pi";
@@ -16,9 +17,26 @@ const Login = () => {
   const [isSignUpPage, setIsSignUpPage] = useState(false);
   const [otpInput,setOtpInput]= useState(false);
   const [startTime,setStartTime] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
+  const actionPending = useRef(false);
 
   const dispatch=useDispatch();
   const navigate=useNavigate();
+  const location = useLocation();
+  const { startManualAuth } = useOutletContext() || {};
+  const beginAction = action => {
+    if (actionPending.current) return false;
+    actionPending.current = true;
+    setPendingAction(action);
+    startManualAuth?.();
+    return true;
+  };
+  const finishAction = () => { actionPending.current = false; setPendingAction(null); };
+  const showAuthError = error => {
+    const data = error.response?.data;
+    const message = typeof data === 'string' && !data.trim().startsWith('<') ? data : data?.message;
+    toast.error(message || 'The server is starting or unavailable. Please try again.');
+  };
 
   const firstName = useRef("");
   const lastName = useRef("");
@@ -26,6 +44,7 @@ const Login = () => {
   const password = useRef("");
   const otp = useRef("");
   const handleLogin = async () => {
+    if (!beginAction('Signing in')) return;
     try {
       const res = await axios.post(
         BASE_URL+"/login",
@@ -33,16 +52,19 @@ const Login = () => {
           emailId: emailId.current.value,
           password: password.current.value,
         },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 180000 }
       )
+      if (!res.data?.data?._id) throw new Error('Unexpected login response');
+      rememberSession();
       dispatch(addUser(res.data.data))
       toast.success(res.data.message);
-      navigate("/")
+      navigate(sessionReturnPath(location.state?.from), { replace: true })
     } catch (err) {
-      toast.error(err.response.data)
-    }
+      showAuthError(err);
+    } finally { finishAction(); }
   };
   const handleSignUp= async () => {
+    if (!beginAction('Creating your account')) return;
     try {
       const res = await axios.post(
         BASE_URL+"/signup",
@@ -53,16 +75,19 @@ const Login = () => {
           password: password.current.value,
           otp: otp.current.value,
         },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 180000 }
       )
+      if (!res.data?.data?._id) throw new Error('Unexpected signup response');
+      rememberSession();
       dispatch(addUser(res.data.data))
       toast.success(res.data.message);
       navigate("/profile")
     } catch (err) {
-      toast.error(err.response.data)
-    } 
+      showAuthError(err);
+    } finally { finishAction(); }
   }
   const handleOtp= async ()=>{
+    if (!beginAction('Sending your code')) return;
     try {
     const res = await axios.post(
         BASE_URL+"/otp",
@@ -72,18 +97,21 @@ const Login = () => {
           emailId: emailId.current.value,
           password: password.current.value,
         },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 180000 }
       )
+      if (typeof res.data?.message !== 'string') throw new Error('Unexpected OTP response');
       setStartTime(Date.now());
       setOtpInput(true);
       toast.success(res.data.message, {
           autoClose: 10000, // 10 seconds
       });
     } catch (err) {
-      setStartTime(0); 
-      setOtpInput(true);
-      toast.error(err.response.data.message || err.response.data)
-    } 
+      if (err.response && err.response.status < 500) {
+        setStartTime(0);
+        setOtpInput(true);
+      }
+      showAuthError(err);
+    } finally { finishAction(); }
   }
 
   
@@ -207,14 +235,15 @@ const Login = () => {
             </fieldset>
           </div>
           <div className="flex justify-center card-actions">
-            <button
+            <button disabled={Boolean(pendingAction)}
               className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] mt-8 mb-2 w-full hover:from-[#0818cbd8] transition-colors duration-500"
               onClick={isSignUpPage?(otpInput?handleSignUp:handleOtp):handleLogin}
             >
-              {isSignUpPage?(otpInput?"Verify & Sign Up":"Send Otp"):"Login"}
+              {pendingAction ? pendingAction + '…' : isSignUpPage?(otpInput?"Verify & Sign Up":"Send Otp"):"Login"}
             </button>
+            {pendingAction && <p className="dt-auth-wait" role="status">The server may take a moment to wake up. Please keep this page open.</p>}
 
-            <button onClick={()=>setIsSignUpPage(!isSignUpPage)} className="cursor-pointer flex gap-1">{!isSignUpPage?(<>New user ? <p className="text-blue-400">Sign Up</p> now</>):(<>Already registered ? <p className="text-blue-400">Login</p> now</>)}</button>
+            <button disabled={Boolean(pendingAction)} onClick={()=>setIsSignUpPage(!isSignUpPage)} className="cursor-pointer flex gap-1">{!isSignUpPage?(<>New user ? <p className="text-blue-400">Sign Up</p> now</>):(<>Already registered ? <p className="text-blue-400">Login</p> now</>)}</button>
           </div>
         </form>
       </div>

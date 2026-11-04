@@ -6,8 +6,10 @@ This repository is the frontend. The Express API and Spring Boot integration ser
 
 ## Features
 
-- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout.
+- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.
+- **Instant entry:** visitors without a remembered session see login/signup immediately while Node's session check and Spring's startup ping run in the background. Protected screens wait for backend session verification.
 - **Developer discovery:** swipeable candidate cards, connection requests, accepted connections, and GitHub, Codeforces, and LeetCode statistics.
+- **Live name search:** Discover opens a searchable profile directory. Both search fields update results dynamically after a 300 ms debounce; `am` matches Aman, Amanda, and Amit by case-insensitive first/last-name prefix. Searches require two characters, exclude your own profile, and show 20 public profiles per page.
 - **Request notifications:** the header loads pending requests after sign-in, shows a count with a gentle ripple, and refreshes on navigation, focus, reconnecting online, and every minute while visible. Reviewing requests updates the shared list and badge.
 - **Human chat:** real-time text messaging over Socket.IO, with persisted history loaded from the backend.
 - **AI recruiter:** a signed-in-only side panel with a fixed animated glass-globe launcher. The dedicated AI route opens the same conversation. Received task updates show a ripple on the current task; completed steps stay still.
@@ -60,9 +62,13 @@ The local HTTP proxies preserve cookies and avoid cross-port browser preflights.
 
 When the frontend opens, it sends one non-blocking `GET /api/ping` to the integration service, including before login. Development uses the existing `/integration-api` proxy; production uses `VITE_STATS_SERVICE_URL`. A missing production service URL skips the request.
 
-The ping starts independently of the AI feature flag because developer statistics also use Spring. It sends no authentication cookies or request body, invokes no AI endpoint, and does not delay rendering or sign-in. Duplicate callers share one attempt per service URL per page load; navigation does not repeat it. There is no polling or automatic retry, failures stay silent, and a stalled request is aborted after two minutes.
+The startup ping is independent of the AI feature flag because developer statistics also use Spring. It sends no authentication cookies or request body, invokes no AI endpoint, and does not delay rendering or sign-in. It makes one quiet attempt per service URL per page load, with a three-minute limit; navigation does not repeat it.
 
-This is a best-effort wake-up, not a readiness check: the browser does not inspect the cross-origin response. It overlaps a Render cold start with browsing; opening AI chat immediately can still encounter startup delay, and the service can sleep again after inactivity.
+When a signed-in user sends an AI question, the message waits in the conversation with a **Starting AI service** status. It shares any in-flight startup ping, or makes a fresh check because a previously ready service might have slept again. Chat is posted only after an HTTP success with the exact `Integration Service is up and running!` response. Render loading HTML, HTTP failures, network failures, and unreadable responses do not count as ready.
+
+Only a waiting question retries health checks, every three seconds after a failed check, for at most three minutes. On timeout, the user sees that the question was not sent and can explicitly retry. The existing 130-second answer timeout starts after readiness; the chat POST is never automatically retried. Logout/account changes cancel the wait; simply closing and reopening the panel preserves it. There is no ongoing keep-alive after startup or a waiting question finishes.
+
+The public Spring `/api/ping` endpoint allows cross-origin reads without credentials. Deploy its CORS change with this frontend update; otherwise a browser cannot confirm readiness. A successful health response confirms that Spring can serve HTTP, not that Gemini, Redis, or retrieval will necessarily succeed.
 
 ## Local development
 
@@ -110,6 +116,14 @@ Open `http://localhost:5173` by default. Restart Vite after changing environment
 
 ## Chat and voice behavior
 
+### Initial visit and session restoration
+
+The public login/signup form renders without waiting for either Render service. Opening a protected URL without a remembered session redirects locally to `/login` before mounting the protected screen or fetching its data. The existing `/profile/view` request wakes Node in the background; the independent Spring health ping starts on page load too.
+
+After successful login, signup, or session restoration, the browser saves only a `devtinder.session-present=1` presentation hint. No token, password, profile, or conversation is stored in it. On a later visit, that hint shows a session-restoration screen while the backend verifies the HttpOnly cookie; it never grants access itself. An expired session clears the hint and opens login. A network/startup failure offers retry or sign-in instead. When storage is blocked, the form appears immediately and an existing cookie can still restore the account after verification.
+
+Manual sign-in cancels the earlier background session check so a late response cannot overwrite the chosen account. Login/OTP/signup submissions show a waiting state and prevent duplicate submissions, with a three-minute request limit and no automatic credential retries. Login preserves the originally requested internal route; signup retains its existing profile-onboarding destination. Successful logout removes the hint.
+
 ### Text and drafts
 
 Human chat uses the existing authenticated `GET /chat/:targetUserId` history endpoint and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. AI chat posts `{ query, userId }` to `/api/chat/stream` and consumes its existing SSE events.
@@ -149,6 +163,7 @@ These validity checks make no AI-generation or embedding calls. Uploading and in
 | --- | --- |
 | `/login` | Login, signup, and OTP verification |
 | `/` | Developer feed |
+| `/discover?q=am&page=1` | Live name search, results, and profile links |
 | `/profile` | Own profile and resume management |
 | `/profile/:userId` | Another developer's profile |
 | `/requests` | Pending connection requests |
@@ -164,6 +179,7 @@ These validity checks make no AI-generation or embedding calls. Uploading and in
 | `src/components/Body.jsx`, `NavBar.jsx` | Session restoration, app shell, navigation, request refresh, logout |
 | `src/components/Login.jsx`, `OtpCoundown.jsx` | Login/signup/OTP flow |
 | `src/components/Feed.jsx`, `UserCard.jsx` | Discovery, swiping, platform statistics |
+| `src/components/Discover.jsx`, `src/hooks/useDeveloperSearch.js` | Debounced authenticated profile search with cancellation, retry and pagination |
 | `src/components/Requests.jsx`, `RequestCard.jsx` | Shared request list and accept/reject actions |
 | `src/components/Chat.jsx` | Human history and socket lifecycle |
 | `src/components/AiDrawerLayout.jsx` | AI panel, conversation, citations, preview validation |
@@ -175,8 +191,9 @@ These validity checks make no AI-generation or embedding calls. Uploading and in
 | `src/utils/speechRuntime.js`, `speechText.js`, `chatMessages.js` | Speech ownership, readable text, and message normalization |
 | `src/utils/appStore.js`, `*Slice.js` | Redux account/feed/connection/request state |
 | `src/utils/constants.js`, `socket.js` | API targets, AI flag, Socket.IO factory |
-| `src/utils/integrationWarmup.js` | One-time, non-blocking Spring health ping on frontend startup |
-| `src/styles/auth.css`, `site.css`, `chat.css` | Authentication, application chrome, and chat styling |
+| `src/utils/integrationWarmup.js` | Shared startup ping and bounded, cancellable readiness wait before AI chat |
+| `src/utils/sessionHint.js` | Non-secret initial-screen hint and safe internal return paths; no authentication authority |
+| `src/styles/auth.css`, `site.css`, `chat.css`, `discover.css` | Authentication, application chrome, chat and Discover styling |
 | `vite.config.js` | React/Tailwind plugins and local proxies |
 
 ## Scripts and verification
