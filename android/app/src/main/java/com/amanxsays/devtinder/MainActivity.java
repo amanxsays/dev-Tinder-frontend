@@ -14,6 +14,14 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NotificationsPlugin.class);
         registerPlugin(PdfPlugin.class);
         super.onCreate(state);
+        int background = android.graphics.Color.rgb(12, 21, 32);
+        getWindow().getDecorView().setBackgroundColor(background);
+        getWindow().setStatusBarColor(background);
+        getWindow().setNavigationBarColor(background);
+        androidx.core.view.WindowInsetsControllerCompat bars = androidx.core.view.WindowCompat.getInsetsController(
+            getWindow(), getWindow().getDecorView());
+        bars.setAppearanceLightStatusBars(false);
+        bars.setAppearanceLightNavigationBars(false);
         boolean debug = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         android.webkit.WebView.setWebContentsDebuggingEnabled(debug);
         if (debug && getBridge() != null) {

@@ -9,8 +9,14 @@
   `IntegrationServiceApplicationTests` context test was deliberately excluded.
 - Android: `:app:testDebugUnitTest`, `:app:assembleDebug`, `:app:lintDebug`, and
   `:app:assembleDebugAndroidTest` pass with JDK 21, SDK 36, and the Gradle wrapper.
-- Six native notification-policy JVM tests pass. Native instrumented tests compile;
-  compilation does not mean those tests have run on a device.
+- Six native notification-policy JVM tests pass. All three native instrumentation
+  tests ran and passed on an Android 16/API 36 emulator: encrypted session storage,
+  notification revocation/binding cleanup, and duplicate-event state.
+- Actual Android WebView checks passed against local HTTP fixtures: bundled launch,
+  native mobile login, secure session save, reload restoration, authenticated AI
+  incremental SSE, local logout clearing session/binding, mobile width, and no
+  uncaught JavaScript exceptions. Native speech/TTS capabilities were available;
+  physical microphone accuracy and real Firebase delivery remain unverified.
 - Headless Chrome fixtures exercised both normal browser and mocked Android bridge
   flows: cookie/native login, bearer requests, signed-in AI SSE, dictation review,
   notification registration, and local logout, without production/provider calls.
@@ -32,6 +38,9 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
   behavior has been verified. Permission handling and plugin mocks do not establish
   those external capabilities.
 - Production signing identity and website APK download publishing remain unset.
+- Release preflight was tested and correctly refuses to proceed without production
+  Firebase client configuration. The local APK is debug-signed and configured for
+  emulator-only local fixtures on ports 17777 and 18080, not a production release.
 - The new backend/mobile routes and coordinated signed AI gateway must be deployed
   before an Android build targets production. Existing deployments are unchanged.
 - A MongoDB credential previously present in Spring's tracked configuration was moved

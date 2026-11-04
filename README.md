@@ -44,9 +44,9 @@ flowchart LR
     Cloudinary["Cloudinary"]
     Speech["Browser speech APIs"]
 
-    Frontend <-->|"Cookie-authenticated API / human chat"| Backend
-    Frontend <-->|"AI query / SSE statuses and answer"| Integration
-    Backend -->|"Stats proxy / resume ingestion"| Integration
+    Frontend <-->|"Authenticated API / human chat / AI SSE"| Backend
+    Frontend -->|"Public readiness ping"| Integration
+    Backend -->|"Signed AI gateway / stats / resume ingestion"| Integration
     Frontend -->|"Signed resume upload"| Cloudinary
     Frontend -->|"Dictation / optional Read aloud"| Speech
 ```
@@ -58,7 +58,8 @@ The integration service owns AI orchestration and its Gemini, Redis, MongoDB, an
 | Traffic | Development | Production |
 | --- | --- | --- |
 | HTTP API | Vite `/api` proxy to `VITE_API_URL` | Direct to `VITE_API_URL` |
-| AI SSE | Vite `/integration-api` proxy to `VITE_STATS_SERVICE_URL` | Direct to `VITE_STATS_SERVICE_URL` |
+| AI SSE | Vite `/api/ai/chat/stream` proxy to Node | Node `/ai/chat/stream` at `VITE_API_URL` |
+| Spring readiness | Vite `/integration-api/api/ping` proxy | `VITE_STATS_SERVICE_URL` + `/api/ping` |
 | Human WebSockets | Direct to `VITE_API_URL` | Direct to `VITE_API_URL` |
 | Developer statistics | Backend `/stats` endpoint | Backend `/stats` endpoint |
 
@@ -132,7 +133,9 @@ Manual sign-in cancels the earlier background session check so a late response c
 
 ### Text and drafts
 
-Human chat uses the existing authenticated `GET /chat/:targetUserId` history endpoint and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. AI chat posts `{ query, userId }` to `/api/chat/stream` and consumes its existing SSE events.
+Human chat uses authenticated `GET /chat/:targetUserId` history and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. The server derives sender identity from the session, requires an accepted connection, and acknowledges persistence before the composer clears its draft. Canonical message IDs deduplicate history, broadcasts, and acknowledgements; they do not imply recipient delivery or read status.
+
+AI chat posts `{ query }` to Node's authenticated `/ai/chat/stream`, which derives the user ID, signs its upstream request to Spring, and relays the existing SSE events. Node and Spring require the same server-only `AI_GATEWAY_SECRET`; deploy the coordinated gateway changes before this frontend. Never put that secret in a `VITE_*` variable.
 
 - Enter sends; Shift+Enter inserts a newline.
 - Drafts are separate for each conversation and stay in memory.
