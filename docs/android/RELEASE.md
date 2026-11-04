@@ -27,6 +27,8 @@ Supply production `android/app/src/release/google-services.json`, set public HTT
 npm run android:release
 ```
 
+Run `npm run android:check` first for a local configuration report. It exits nonzero when required inputs are absent. It does not contact Firebase, upload anything, validate private-key credentials, or replace artifact signing and real-device verification.
+
 The Gradle release task deliberately fails without production Firebase configuration or explicit signing values. Verify the signed artifact with Android Build Tools `apksigner verify --print-certs`, record its SHA-256 checksum, and test an upgrade over the prior signed build without uninstalling.
 
 ## APK distribution first

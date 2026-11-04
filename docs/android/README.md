@@ -11,6 +11,8 @@ The Android application bundles the same React UI as the website through Capacit
 
 ## Build locally
 
+Before configuring push or signing a release, run `npm run android:check` (release) or `npm run android:check:debug`. This read-only check reports missing public service URLs, Firebase client metadata/package mismatches, and release signing inputs without printing credential values. It does not require Firebase CLI sign-in. Debug checks require Firebase configuration for push readiness even though a debug APK can compile without it. A passing check does not verify server credentials, actual notification delivery, or the signing certificate.
+
 Run from the frontend repository:
 
 ```powershell
