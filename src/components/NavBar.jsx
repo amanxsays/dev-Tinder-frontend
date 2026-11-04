@@ -90,7 +90,6 @@ const NavBar = () => {
           <input type="search" placeholder="Search developers" aria-label="Search developers" maxLength={80} value={searchQuery} onChange={event => searchDevelopers(event.target.value)} />
         </form>
         <nav className="dt-header-actions" aria-label="Main navigation">
-          <NavLink to="/discover" className="dt-discover-link">Discover</NavLink>
           <NavLink to="/requests" className="dt-header-icon dt-requests-link" aria-label={requestLabel} title={requestLabel}>
             <FiBell aria-hidden="true" />
             {pendingCount > 0 && <span className="dt-request-signal" aria-hidden="true">{pendingCount > 99 ? '99+' : pendingCount}</span>}

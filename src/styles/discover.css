@@ -1,19 +1,9 @@
 .dt-discover { max-width: 1100px; margin: 0 auto; }
-.dt-discover-intro { margin: 10px 0 28px; }
-.dt-discover-eyebrow { color: #7fa7c7; font-size: 10px; letter-spacing: .16em; }
-.dt-discover-intro h1 { margin: 10px 0 12px; font-size: clamp(28px, 4vw, 38px); letter-spacing: -.04em; font-weight: 600; }
-.dt-discover-intro > p:last-child { color: #a5b9ce; font-size: 14px; line-height: 1.7; }
-.dt-discover-search { display: flex; gap: 12px; align-items: center; max-width: 600px; padding: 10px 16px; min-height: 56px; border: 1px solid #a7d4fa2e; border-radius: 14px; background: #1b2b3b9c; color: #8fb4d3; }
-.dt-discover-search:focus-within { border-color: #72b8ef80; box-shadow: 0 0 0 3px #3ba1e00d; }
-.dt-discover-search input { flex: 1; width: 100%; min-width: 0; background: transparent; color: #e6f2ff; outline: none; font: inherit; font-size: 15px; }
-.dt-discover-search input::placeholder { color: #90a6bc; }
-.dt-discover-search button { display: grid; place-items: center; min-height: 44px; min-width: 44px; border-radius: 10px; cursor: pointer; }
-.dt-discover-results { margin-top: 28px; min-height: 240px; }
+.dt-app-main:has(> .dt-discover) { padding-top: 24px; }
+.dt-discover-results { min-height: 240px; }
 .dt-discover-status, .dt-discover-summary { color: #b0c4d8; font-size: 13px; margin-bottom: 20px; }
-.dt-discover-empty { margin: 48px auto; max-width: 420px; padding: 28px 12px; text-align: center; color: #a4b9ce; font-size: 14px; line-height: 1.8; }
-.dt-discover-empty > svg { margin: 0 auto 18px; width: 26px; height: 26px; color: #70b7e4; }
-.dt-discover-empty h2 { color: #d8e7f6; font-size: 19px; margin-bottom: 8px; font-weight: 500; }
-.dt-discover-empty button { margin-top: 16px; }
+.dt-discover-feedback { color: #a4b9ce; font-size: 14px; line-height: 1.8; }
+.dt-discover-feedback button { margin-top: 16px; }
 .dt-discover-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .dt-discover-card { display: flex; flex-direction: column; min-width: 0; padding: 22px; border: 1px solid #b1d3f21b; border-radius: 18px; background: linear-gradient(145deg, #1b2a3acf, #121d2bcc); box-shadow: 0 10px 28px #00000014; }
 .dt-discover-person { display: flex; align-items: center; gap: 13px; }
@@ -31,4 +21,4 @@
 .dt-discover-pages button:disabled { opacity: .4; cursor: not-allowed; }
 .dt-discover a:focus-visible, .dt-discover button:focus-visible { outline: 2px solid #8ccfff; outline-offset: 3px; }
 @media (max-width: 950px) { .dt-discover-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .dt-discover-grid { grid-template-columns: 1fr; } .dt-discover-card { padding: 20px; } .dt-discover-intro { margin-top: 0; } }
+@media (max-width: 600px) { .dt-discover-grid { grid-template-columns: 1fr; } .dt-discover-card { padding: 20px; } .dt-app-main:has(> .dt-discover) { padding-top: 18px; } }
