@@ -1,6 +1,6 @@
 import { ImCross } from "react-icons/im";
 import { FaCheck } from "react-icons/fa";
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { BASE_URL } from "../utils/constants";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";

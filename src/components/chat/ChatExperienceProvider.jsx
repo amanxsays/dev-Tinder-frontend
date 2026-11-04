@@ -1,3 +1,5 @@
+import { isAndroid } from '../../platform/platform';
+import { createNativeSpeechEngines } from '../../platform/nativeSpeech';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -8,15 +10,25 @@ import '../../styles/chat.css';
 export default function ChatExperienceProvider({ children }) {
   const accountId = useSelector(store => store.user?._id) || 'anonymous';
   const { pathname } = useLocation();
+  const [nativeEngines, setNativeEngines] = useState(null);
+  useEffect(() => {
+    if (!isAndroid()) return;
+    let alive = true;
+    void createNativeSpeechEngines().then(engines => { if (alive) setNativeEngines(engines); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const runtime = useMemo(() => createSpeechRuntime({
     ownerScope: accountId,
-    Recognition: window.SpeechRecognition || window.webkitSpeechRecognition,
-    synthesis: window.speechSynthesis,
-    Utterance: window.SpeechSynthesisUtterance,
-    secureContext: window.isSecureContext,
-  }), [accountId]); // New account receives a completely separate speech owner.
+    ...(isAndroid() ? nativeEngines || {} : {
+      Recognition: window.SpeechRecognition || window.webkitSpeechRecognition,
+      synthesis: window.speechSynthesis,
+      Utterance: window.SpeechSynthesisUtterance,
+    }),
+    secureContext: isAndroid() || window.isSecureContext,
+  }), [accountId, nativeEngines]); // New account receives a completely separate speech owner.
   const speech = useSyncExternalStore(runtime.subscribe, runtime.getSnapshot);
   useEffect(() => {
+    if (isAndroid()) { runtime.setBrowserName("Android"); return; }
     let disposed = false;
     // Brave can expose Chromium's constructor even when its speech service is unavailable.
     Promise.resolve().then(() => navigator.brave?.isBrave?.())

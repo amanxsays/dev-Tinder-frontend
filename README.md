@@ -4,6 +4,12 @@ DevTinder's React application for discovering developers, managing connections, 
 
 This repository is the frontend. The Express API and Spring Boot integration service remain separate repositories.
 
+## Android application
+
+The same frontend now includes a Capacitor Android project in `android/`, with native secure sessions, dictation, Read aloud, private PDF preview, and Firebase notification bridges. Web builds still produce `dist/`; Android bundles produce `dist-android/`. APK updates are separate from Netlify deployments.
+
+See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
+
 ## Features
 
 - **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.

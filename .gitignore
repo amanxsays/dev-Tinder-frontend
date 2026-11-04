@@ -26,3 +26,16 @@ dist-ssr
 node_modules
 
 .env
+
+# Android bundles, local SDK paths, credentials and signing keys
+dist-android/
+android/.gradle/
+android/local.properties
+android/**/build/
+android/**/google-services.json
+android/key.properties
+*.keystore
+*.jks
+.env.*
+!.env.example
+!.env.android.example

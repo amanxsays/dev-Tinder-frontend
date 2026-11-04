@@ -12,6 +12,9 @@ const messages = {
 const join = (base, text) => base + (base && text && !/\s$/.test(base) ? ' ' : '') + text;
 
 export function recognitionErrorMessage(code, browserName = '') {
+  if (browserName === 'Android' && code === 'not-allowed') {
+    return 'Microphone permission was denied. Allow it in Android Settings → Apps → DevTinder → Permissions, or keep typing.';
+  }
   if (browserName === 'Brave' && ['network', 'service-not-allowed'].includes(code)) {
     return "Brave's speech recognition is unavailable here. Use Chrome for voice, or your device's keyboard dictation in the text box. Your draft is preserved.";
   }
@@ -77,7 +80,9 @@ export function createSpeechRuntime(options = {}) {
       browserName = name;
       emit({ recognitionHint: name === 'Brave'
         ? 'Dictation may be unavailable in Brave. Use Chrome or your device\'s keyboard dictation. Your browser may process speech remotely.'
-        : '' });
+        : name === 'Android' ? Recognition
+          ? 'English dictation · Your phone may process speech remotely. Review before sending.'
+          : 'Speech recognition is unavailable on this phone. You can keep typing.' : '' });
     },
     recognitionSupported: Boolean(Recognition),
     synthesisSupported: Boolean(synthesis && Utterance),

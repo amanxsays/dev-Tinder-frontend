@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../platform/apiClient';
 import { createSocketConnection } from '../utils/socket';
 import { BASE_URL } from '../utils/constants';
-import { normalizeMessage, messageTime } from '../utils/chatMessages';
+import { normalizeMessage, messageTime, mergeMessages } from '../utils/chatMessages';
 import { useChatExperience } from '../contexts/ChatExperienceContext';
 import { useChatScroll } from '../hooks/useChatScroll';
 import ChatShell from './chat/ChatShell';
@@ -34,6 +34,9 @@ function HumanChat({ targetUserId }) {
   const [connection, setConnection] = useState('Connecting…');
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [sending, setSending] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const sendPending = useRef(false);
   const { scrollRef, onScroll, showLatest, jumpToLatest } = useChatScroll(messages.length + ':' + loading);
   const userId = user?._id;
 
@@ -56,12 +59,21 @@ function HumanChat({ targetUserId }) {
     socketRef.current = socket;
     setLoading(true);
     setError('');
+    setSending(false);
+    sendPending.current = false;
     setMessages([]);
     const joined = () => {
       if (disposed) return;
-      socket.emit('joinChat', { userId, targetUserId });
-      setConnection('Connected');
-      setError(previous => previous.startsWith('Chat connection interrupted.') ? '' : previous);
+      socket.timeout(15000).emit('joinChat', { targetUserId }, (failure, result) => {
+        if (disposed) return;
+        if (failure || !result?.ok) {
+          setConnection('Unavailable');
+          setError(result?.error || 'Could not join this conversation. Reconnect to try again.');
+        } else {
+          setConnection('Connected');
+          setError(previous => previous.startsWith('Chat connection interrupted.') ? '' : previous);
+        }
+      });
     };
     const disconnected = () => {
       if (disposed) return;
@@ -71,24 +83,33 @@ function HumanChat({ targetUserId }) {
     const received = payload => {
       if (disposed) return;
       const message = normalizeMessage({ ...payload, time: Date.now() }, userId);
-      setMessages(previous => [...previous, message]);
+      setMessages(previous => mergeMessages(previous, [message]));
     };
     socket.on('connect', joined);
     socket.on('disconnect', disconnected);
     socket.on('connect_error', disconnected);
     socket.on('messageReceived', received);
     if (socket.connected) joined();
-    axios.get(BASE_URL + '/chat/' + targetUserId, {
-      withCredentials: true, signal: controller.signal, timeout: 15000,
-    }).then(response => {
-      if (disposed) return;
-      const history = (Array.isArray(response.data?.messages) ? response.data.messages : []).map(message => normalizeMessage(message, userId));
-      setMessages(previous => [...history, ...previous]);
-    }).catch(() => {
-      if (!disposed) setError('Could not load chat history. Retry explicitly; your draft is preserved.');
-    }).finally(() => { if (!disposed) setLoading(false); });
+    let historyPending = false;
+    const loadHistory = () => {
+      if (historyPending || disposed) return;
+      historyPending = true;
+      void axios.get(BASE_URL + '/chat/' + targetUserId, {
+        withCredentials: true, signal: controller.signal, timeout: 15000,
+      }).then(response => {
+        if (disposed) return;
+        const history = (Array.isArray(response.data?.messages) ? response.data.messages : []).map(message => normalizeMessage(message, userId));
+        setMessages(previous => mergeMessages(history, previous));
+        setUncertain(false);
+      }).catch(() => {
+        if (!disposed) setError('Could not load chat history. Retry explicitly; your draft is preserved.');
+      }).finally(() => { historyPending = false; if (!disposed) setLoading(false); });
+    };
+    loadHistory();
+    window.addEventListener('focus', loadHistory);
     return () => {
       disposed = true; controller.abort();
+      window.removeEventListener('focus', loadHistory);
       socket.off('connect', joined);
       socket.off('disconnect', disconnected);
       socket.off('connect_error', disconnected);
@@ -104,20 +125,32 @@ function HumanChat({ targetUserId }) {
       setError('Chat is disconnected. Your draft has not been sent. Reconnect and press Send.');
       return;
     }
-    if (!text.trim()) return;
+    if (!text.trim() || sendPending.current || uncertain) return;
+    sendPending.current = true;
+    setSending(true);
     runtime.release(owner);
     runtime.clearStatus(owner);
-    socket.emit('sendMessage', { firstName: user.firstName, userId, targetUserId, text, photoUrl: user.photoUrl });
-    setDraft(owner, '');
     setError('');
-    // Only room broadcasts insert live messages: no second optimistic copy.
-    // This legacy protocol has no persistence/recipient acknowledgement.
+    socket.timeout(15000).emit('sendMessage', { targetUserId, text }, (failure, result) => {
+      if (socketRef.current !== socket) return;
+      sendPending.current = false;
+      setSending(false);
+      if (failure) {
+        setUncertain(true);
+        setError('We could not confirm whether your message was saved. Reload history and review it before sending again. Your draft is preserved.');
+      } else if (!result?.ok) {
+        setError(result?.error || 'Your message was not saved. Your draft is preserved.');
+      } else {
+        if (result.message) setMessages(previous => mergeMessages(previous, [normalizeMessage(result.message, userId)]));
+        setDraft(owner, '');
+      }
+    });
   };
   const partnerName = partner ? [partner.firstName, partner.lastName].filter(Boolean).join(' ') : 'Conversation';
   return <div className="dt-chat-surface">
     <ChatShell title={partnerName} subtitle="DevTinder · Direct message"
       identity={<Avatar url={partner?.photoUrl} name={partnerName} />} onBack={() => navigate('/connections')}
-      composer={<ChatComposer owner={owner} onSend={send} disabled={loading || !userId} />}>
+      composer={<ChatComposer owner={owner} onSend={send} disabled={loading || !userId || sending || uncertain} placeholder={sending ? 'Saving message…' : 'Write a message…'} />}>
       <div ref={scrollRef} onScroll={onScroll} className="dt-chat-scroll">
         {loading && <p className="dt-human-empty" role="status">Loading conversation…</p>}
         {!loading && !messages.length && <div className="dt-human-empty"><h2>Start a conversation</h2><p>Say hello with a message, or dictate a draft.</p></div>}

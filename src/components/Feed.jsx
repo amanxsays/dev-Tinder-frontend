@@ -1,6 +1,6 @@
 import { useEffect,useState } from "react";
 import UserCard from "./UserCard";
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import {addFeed} from "../utils/feedSlice";

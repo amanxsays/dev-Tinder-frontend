@@ -1,0 +1,7 @@
+.dt-android { --dt-safe-top: env(safe-area-inset-top, 0px); --dt-safe-bottom: env(safe-area-inset-bottom, 0px); }
+.dt-android .dt-site-header { padding-top: max(12px, var(--dt-safe-top)); }
+.dt-android .dt-app-frame { padding-bottom: var(--dt-safe-bottom); }
+.dt-android .dt-chat-surface, .dt-android .dt-ai-dialog { max-height: 100dvh; }
+.dt-android input, .dt-android textarea { font-size: max(16px, 1em); }
+.dt-android .dt-composer { padding-bottom: max(10px, var(--dt-safe-bottom)); }
+.dt-android .dt-native-notice { margin: 8px 16px; padding: 12px; border: 1px solid #8ecfff44; border-radius: 12px; background: #10202d; }

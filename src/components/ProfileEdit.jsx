@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { useState } from "react";
 import { BASE_URL } from "../utils/constants";
 import { toast } from "react-toastify";

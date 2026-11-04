@@ -1,11 +1,15 @@
 import { useRef, useState } from "react";
-import axios from "axios";
+import axios from "../platform/apiClient";
+import uploadClient from "axios";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 import { FaFilePdf, FaUpload } from "react-icons/fa";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import { isAndroid } from '../platform/platform';
+import { openNativePdf } from '../platform/nativePdf';
+import { session } from '../platform/session';
 
 const MAX_SIZE_MB = 5;
 
@@ -15,6 +19,18 @@ const ResumeSection = ({ user }) => {
   const [isUploading, setIsUploading] = useState(false);
 
   const { resumeUrl, resumeFileName } = user || {};
+  const openResume = async event => {
+    if (!isAndroid()) return;
+    event.preventDefault();
+    try {
+      const source = { candidateId: user._id, documentId: user.resumeDocumentId, fileName: resumeFileName, fileUrl: resumeUrl };
+      const response = await axios.post(BASE_URL + '/profile/resume/active-sources', { sources: [source] }, { timeout: 15000 });
+      if (session.snapshot()?.userId !== user._id || !session.token()) return;
+      const current = response.data?.sources?.[0];
+      if (!current) throw new Error('This resume was replaced or removed. Refresh your profile.');
+      await openNativePdf(current);
+    } catch (error) { toast.error(error.message || 'Could not open this resume.'); }
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -49,7 +65,7 @@ const ResumeSection = ({ user }) => {
       cloudForm.append("folder", sig.folder);
       cloudForm.append("public_id", sig.publicId);
 
-      const cloudRes = await axios.post(
+      const cloudRes = await uploadClient.post(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/raw/upload`,
         cloudForm
       );
@@ -99,6 +115,7 @@ const ResumeSection = ({ user }) => {
           {resumeFileName ? (
             <a
               href={resumeUrl}
+              onClick={openResume}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-gray-300 truncate hover:text-blue-400 hover:underline"

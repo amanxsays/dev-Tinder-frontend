@@ -1,0 +1,87 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace = "com.amanxsays.devtinder"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.amanxsays.devtinder"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    signingConfigs {
+        release {
+            def signingPath = System.getenv('DEVTINDER_KEYSTORE_PATH')
+            if (signingPath) {
+                storeFile file(signingPath)
+                storePassword System.getenv('DEVTINDER_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('DEVTINDER_KEY_ALIAS')
+                keyPassword System.getenv('DEVTINDER_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes.release.signingConfig = signingConfigs.release
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+def hasFirebaseConfig = file('google-services.json').exists() || file('src/debug/google-services.json').exists() || file('src/release/google-services.json').exists()
+if (hasFirebaseConfig) apply plugin: 'com.google.gms.google-services'
+else logger.lifecycle('DevTinder: no Firebase client configuration; debug build has no push registration.')
+
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+    doFirst {
+        if (!file('google-services.json').exists() && !file('src/release/google-services.json').exists()) {
+            throw new GradleException('Release requires production google-services.json. See docs/android/FIREBASE.md.')
+        }
+        def firebaseFile = file('src/release/google-services.json').exists() ? file('src/release/google-services.json') : file('google-services.json')
+        def firebaseConfig = new groovy.json.JsonSlurper().parse(firebaseFile)
+        if (!(firebaseConfig.client ?: []).any { it.client_info?.android_client_info?.package_name == 'com.amanxsays.devtinder' }) {
+            throw new GradleException('Production Firebase configuration does not contain com.amanxsays.devtinder.')
+        }
+        def bundleMarker = file('src/main/assets/public/devtinder-build.json')
+        if (!bundleMarker.exists() || new groovy.json.JsonSlurper().parse(bundleMarker).environment != 'production') {
+            throw new GradleException('Release requires a production Android web bundle. Run npm run android:release.')
+        }
+        if (!System.getenv('DEVTINDER_KEYSTORE_PATH') || !System.getenv('DEVTINDER_KEYSTORE_PASSWORD') || !System.getenv('DEVTINDER_KEY_ALIAS') || !System.getenv('DEVTINDER_KEY_PASSWORD')) {
+            throw new GradleException('Release requires explicit signing credentials. See docs/android/RELEASE.md.')
+        }
+    }
+}

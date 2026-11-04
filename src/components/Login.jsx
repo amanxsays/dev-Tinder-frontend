@@ -1,5 +1,8 @@
+import { isAndroid } from '../platform/platform';
+import { acceptNativeSession } from '../platform/session';
+import { getNotificationState, disableNotifications } from '../platform/nativeNotifications';
 import { useRef, useState } from "react";
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
@@ -37,6 +40,13 @@ const Login = () => {
     const message = typeof data === 'string' && !data.trim().startsWith('<') ? data : data?.message;
     toast.error(message || 'The server is starting or unavailable. Please try again.');
   };
+  const saveSession = async data => {
+    if (isAndroid()) {
+      const previous = await getNotificationState();
+      if (previous.userId && previous.userId !== data.data?._id) await disableNotifications({ awaitRemote: false });
+    }
+    await acceptNativeSession(data);
+  };
 
   const firstName = useRef("");
   const lastName = useRef("");
@@ -47,7 +57,7 @@ const Login = () => {
     if (!beginAction('Signing in')) return;
     try {
       const res = await axios.post(
-        BASE_URL+"/login",
+        BASE_URL+(isAndroid() ? "/mobile/login" : "/login"),
         {
           emailId: emailId.current.value,
           password: password.current.value,
@@ -55,6 +65,7 @@ const Login = () => {
         { withCredentials: true, timeout: 180000 }
       )
       if (!res.data?.data?._id) throw new Error('Unexpected login response');
+      await saveSession(res.data);
       rememberSession();
       dispatch(addUser(res.data.data))
       toast.success(res.data.message);
@@ -67,7 +78,7 @@ const Login = () => {
     if (!beginAction('Creating your account')) return;
     try {
       const res = await axios.post(
-        BASE_URL+"/signup",
+        BASE_URL+(isAndroid() ? "/mobile/signup" : "/signup"),
         {
           firstName: firstName.current.value,
           lastName: lastName.current.value,
@@ -78,6 +89,7 @@ const Login = () => {
         { withCredentials: true, timeout: 180000 }
       )
       if (!res.data?.data?._id) throw new Error('Unexpected signup response');
+      await saveSession(res.data);
       rememberSession();
       dispatch(addUser(res.data.data))
       toast.success(res.data.message);

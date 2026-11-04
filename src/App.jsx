@@ -1,3 +1,5 @@
+import AndroidLifecycle from './components/AndroidLifecycle';
+import NotificationSettings from './components/NotificationSettings';
 import Body from "./components/Body";
 import Login from "./components/Login";
 import Feed from "./components/Feed";
@@ -21,6 +23,7 @@ function App() {
             <Provider store={appStore}>
                 <BrowserRouter>
                     <ChatExperienceProvider>
+                    <AndroidLifecycle />
                     <AiDrawerLayout>
                         <Routes>
                             <Route path="/" element={<Body />}>
@@ -30,6 +33,7 @@ function App() {
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/connections" element={<Connections />} />
                                 <Route path="/requests" element={<Requests />} />
+                                <Route path="/settings/notifications" element={<NotificationSettings />} />
                                 <Route path="/chat/ai-agent" element={<AiChatRoute />} />
                                 <Route path="/chat/:targetUserId" element={<Chat />} />
                                 <Route path="/profile/:userId" element={<ViewProfile />} />

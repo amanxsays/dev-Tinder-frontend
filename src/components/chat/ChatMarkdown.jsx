@@ -1,3 +1,4 @@
+import { copyText } from '../../platform/externalLinks';
 import React, { createContext, useContext, useState } from "react";
 import { findResumeSource, splitResumeReferences } from "../../utils/resumeSources";
 const INLINE_TOKENS = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
@@ -83,7 +84,7 @@ const CodeBlock = ({ code, lang }) => {
 
     const copy = async () => {
         try {
-            await navigator.clipboard.writeText(code);
+            await copyText(code);
             setCopied(true);
             setTimeout(() => setCopied(false), 1600);
         } catch {
