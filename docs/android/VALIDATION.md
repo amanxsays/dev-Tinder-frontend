@@ -2,8 +2,8 @@
 
 ## Verified locally
 
-- Frontend: 62 Node tests pass; focused ESLint passes; normal Vite website build passes.
-- Backend: 31 Node tests pass. Existing dependency audit findings remain; unused
+- Frontend: 68 Node tests pass; focused ESLint passes; normal Vite website build passes.
+- Backend: 34 Node tests pass. Existing dependency audit findings remain; unused
   optional Firebase Firestore/Storage dependencies are excluded by backend `.npmrc`.
 - Spring: 67 isolated unit/controller tests pass with JDK 25. The production-connected
   `IntegrationServiceApplicationTests` context test was deliberately excluded.
@@ -16,7 +16,7 @@
   native mobile login, secure session save, reload restoration, authenticated AI
   incremental SSE, local logout clearing session/binding, mobile width, and no
   uncaught JavaScript exceptions. Native speech/TTS capabilities were available;
-  physical microphone accuracy and real Firebase delivery remain unverified.
+  physical microphone accuracy remains unverified. Later real FCM transport checks are recorded below.
 - Headless Chrome fixtures exercised both normal browser and mocked Android bridge
   flows: cookie/native login, bearer requests, signed-in AI SSE, dictation review,
   notification registration, and local logout, without production/provider calls.
@@ -33,10 +33,9 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 
 ## Release gates still outstanding
 
-- Development/production Firebase client files and server credentials are not supplied.
-- No real Firebase push, physical microphone, native TTS engine, or real-phone battery
-  behavior has been verified. Permission handling and plugin mocks do not establish
-  those external capabilities.
+- Production Firebase client files and server credentials are not supplied. Development Firebase inputs have been verified locally.
+- Complete authenticated push delivery/tap flows, physical microphone, native TTS engine, and real-phone battery
+  behavior remain release checks. Emulator transport success does not establish those capabilities.
 - Production signing identity and website APK download publishing remain unset.
 - Release preflight was tested and correctly refuses to proceed without production
   Firebase client configuration. The local APK is debug-signed and configured for
@@ -46,6 +45,16 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 - A MongoDB credential previously present in Spring's tracked configuration was moved
   to ignored local configuration. Its historical value must be rotated by the owner
   before production release; no history was rewritten or live database changed.
+
+## Firebase development verification - 2026-11-05
+
+- The ignored debug Firebase configuration matches `com.amanxsays.devtinder.debug` in project `devtinder-development`; the Firebase-enabled debug APK builds successfully.
+- The backend's separate private credential passed an actual FCM validation-only request. The key remains outside the repositories and was supplied only through the test process environment.
+- An API 36 Google APIs emulator obtained a real FCM token. Development-project data messages produced native generic **New message** and **New connection request** notifications while the app was in the background.
+- Native binding deactivation cleared posted notifications. A subsequent event for the old binding produced no visible alert during a five-second observation window; this bounded observation does not guarantee delivery timing or prove every race.
+- These checks used a synthetic local native session and binding, not a production account or database. They verify the native FCM transport/display boundary, not the complete authenticated server-registration/outbox flow. Local isolated server flows were tested separately as described above.
+- No notification-tap navigation, killed-process delivery, or physical-phone battery behavior is claimed by this test. Those release checks remain pending. No live hosting settings were changed and no credential or Firebase configuration file was committed.
+- Frontend Node tests: 68 passing, including six setup-preflight tests. Backend Node tests: 34 passing, including three validation-only Firebase setup tests.
 
 ## Repeatable local commands
 
