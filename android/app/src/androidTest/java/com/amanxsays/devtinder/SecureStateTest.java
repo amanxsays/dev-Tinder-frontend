@@ -1,13 +1,16 @@
 package com.amanxsays.devtinder;
 
 import android.content.Context;
+import android.content.Intent;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.amanxsays.devtinder.platform.NotificationStore;
+import com.amanxsays.devtinder.platform.NotificationsPlugin;
 import com.amanxsays.devtinder.platform.SessionStore;
 import com.getcapacitor.JSObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import java.time.Instant;
 import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
@@ -39,5 +42,26 @@ public class SecureStateTest {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         NotificationStore push = new NotificationStore(context); push.deactivate();
         assertTrue(push.markNew("fixture-event")); assertFalse(push.markNew("fixture-event")); push.deactivate();
+    }
+
+    @Test public void notificationTapIsConsumedOnceAndStaleBindingIsRejected() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        NotificationStore push = new NotificationStore(context); push.deactivate();
+        JSObject binding = push.state();
+        String expiry = Instant.now().plusSeconds(600).toString();
+        binding.put("bindingId", "fixture-tap-binding"); binding.put("expiresAt", expiry); push.save(binding);
+        JSObject payload = new JSObject();
+        payload.put("eventId", "fixture-tap-event"); payload.put("type", "message");
+        payload.put("bindingId", "fixture-tap-binding"); payload.put("targetUserId", "111111111111111111111111");
+        payload.put("createdAt", Instant.now().toString()); payload.put("expiresAt", expiry);
+        Intent intent = new Intent().putExtra(NotificationsPlugin.TAP_EXTRA, payload.toString());
+        NotificationsPlugin.captureTap(context, intent);
+        assertFalse(intent.hasExtra(NotificationsPlugin.TAP_EXTRA));
+        assertEquals("fixture-tap-event", push.consumeTap().getString("eventId"));
+        assertEquals(0, push.consumeTap().length());
+        payload.put("bindingId", "old-account-binding");
+        NotificationsPlugin.captureTap(context, new Intent().putExtra(NotificationsPlugin.TAP_EXTRA, payload.toString()));
+        assertEquals(0, push.consumeTap().length());
+        push.deactivate(); push.completeRevocation("fixture-tap-binding");
     }
 }

@@ -67,3 +67,5 @@ cd android
 Unit tests cover native notification acceptance policy. Instrumentation tests cover encrypted storage, notification binding removal, and duplicate event state. Physical-device speech, PDF accessibility, background delivery, force-stop behavior, battery restrictions, and two-user Android/web messaging remain required release checks. A successful APK build does not prove FCM delivery or microphone behavior.
 
 See [release checklist](RELEASE.md) before distribution.
+
+See [notification and physical-device testing](TESTING.md) for isolated test setup, opt-in notification navigation checks, session expiry, and USB forwarding.
