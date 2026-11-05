@@ -6,7 +6,19 @@ The download route has its own static layout outside the application lifecycle. 
 
 Share `https://devtinderfront.netlify.app/download` directly with phone or desktop users. They do not need an account to view the page or download the APK. An account is required only when signing into the installed app.
 
-## Current release: 1.0.1
+## Current release: 1.0.2
+
+- Package: `com.amanxsays.devtinder`; version name `1.0.2`, version code `3`.
+- Source: `b6d2784c795be291712aab1beafe3bf18cb9e033`.
+- Release tag: `android-v1.0.2`; asset `DevTinder-1.0.2.apk`, 5,688,425 bytes.
+- SHA-256: `502c362ea7b2025ebcb63fbaa885c007b621a06321e503386e144123e4c59f3c`.
+- Signing certificate unchanged: `aab1071e2f3d8c0e454946bdd598d99d91e3b669f892e9000a6f0ccd3e113ed0`.
+- Primary: `https://devtinderfront.netlify.app/downloads/DevTinder-1.0.2.apk`.
+- Alternative: `https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.2/DevTinder-1.0.2.apk`.
+
+See [1.0.2 fixes and phone checks](1.0.2-FIXES.md). Signature/identity, production bundle/endpoints, native inset configuration, updated UI markers and targeted credential patterns were inspected. An anonymous GitHub download matched the signed APK hash. Install over the earlier app without uninstalling. Physical-device upgrade and keyboard checks remain pending. Old Netlify 1.0/1.0.1 links redirect to the current 1.0.2 asset; earlier explicit GitHub releases remain available separately.
+
+## Previous release: 1.0.1
 
 - Package: `com.amanxsays.devtinder`; version name `1.0.1`, version code `2`.
 - Source: `649359930e69154baba8245ed7371d5af7b6b599`.
