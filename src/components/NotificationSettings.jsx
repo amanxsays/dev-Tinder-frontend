@@ -1,36 +1,59 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { isAndroid } from '../platform/platform';
-import { disableNotifications, enableNotifications, getNotificationState, setNotificationsOptIn } from '../platform/nativeNotifications';
+import { FiBell } from 'react-icons/fi';
+import { isAndroid, NativeNotifications } from '../platform/platform';
+import { disableNotifications, enableNotifications, getNotificationState, notificationsOptedIn, setNotificationsOptIn } from '../platform/nativeNotifications';
 
 export default function NotificationSettings() {
   const userId = useSelector(store => store.user?._id);
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  useEffect(() => { let alive = true; void getNotificationState().then(value => { if (alive) setState(value); }).catch(() => { if (alive) setMessage('Notification setup is unavailable in this build.'); }); return () => { alive = false; }; }, []);
-  const change = async enabled => {
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      try {
+        let value = await getNotificationState();
+        if (!alive) return;
+        if (isAndroid() && value.permission === 'granted' && notificationsOptedIn()) {
+          await enableNotifications(userId);
+          value = await getNotificationState();
+        }
+        if (alive) setState(value);
+      } catch { if (alive) setMessage('Could not check notifications. Please try again.'); }
+    };
+    void refresh();
+    window.addEventListener('focus', refresh);
+    return () => { alive = false; window.removeEventListener('focus', refresh); };
+  }, [userId]);
+  const enabled = state?.permission === 'granted' && Boolean(state?.bindingId) && notificationsOptedIn();
+  const blocked = state?.permission === 'denied';
+  const change = async enable => {
     setBusy(true); setMessage('');
-    setNotificationsOptIn(enabled);
+    setNotificationsOptIn(enable);
     try {
-      if (enabled) await enableNotifications(userId, { requestPermission: true });
-      else await disableNotifications();
-      setMessage(enabled ? 'Notifications enabled. Message content stays private.' : 'Notifications disabled.');
-    } catch (error) { setMessage(error.message || 'Could not update notification registration. Try again.'); }
-    finally { setState(await getNotificationState().catch(() => null)); setBusy(false); }
+      if (enable && blocked) await NativeNotifications.openSettings();
+      else if (enable) await enableNotifications(userId, { requestPermission: true });
+      else await disableNotifications({ awaitRemote: false });
+    } catch {
+      setMessage('Could not update notifications. Please try again.');
+    } finally {
+      setState(await getNotificationState().catch(() => null));
+      setBusy(false);
+    }
   };
-  return <section className="dt-session-status" aria-labelledby="notification-settings-title">
+  return <section className="dt-session-status dt-notification-settings" aria-labelledby="notification-settings-title">
     <h1 id="notification-settings-title">Notifications</h1>
-    <p>Get private alerts for new messages and connection requests. Alerts do not include names or message text.</p>
     {isAndroid() ? <>
-      <p>Android permission: {state?.permission || 'checking'}</p>
-      <p>{state?.bindingId ? 'This phone is registered.' : 'This phone is not registered.'}</p>
-      <div><button type="button" disabled={busy} onClick={() => change(true)}>Enable notifications</button>
-        <button type="button" disabled={busy} onClick={() => change(false)}>Disable notifications</button></div>
-      <p>Permission can also be managed in Android Settings → Apps → DevTinder → Notifications. Server startup and battery restrictions can delay alerts.</p>
-    </> : <p>Phone notifications are available in the DevTinder Android application.</p>}
-    <p role="status">{busy ? 'Updating notifications…' : message}</p>
-    <Link to="/connections">Back to connections</Link>
+      <div className="dt-notification-row">
+        <FiBell aria-hidden="true" />
+        <div><h2>Messages &amp; requests</h2><p>Stay updated. Message previews stay private.</p></div>
+        {!blocked && <button type="button" className="dt-notification-switch" role="switch" aria-label="Message and connection-request notifications" aria-checked={enabled} disabled={busy || !state} onClick={() => change(!enabled)}><span /></button>}
+      </div>
+      {blocked && <><p>Notifications are turned off in your phone settings.</p><button type="button" disabled={busy} onClick={() => change(true)}>Open Android settings</button></>}
+    </> : <p>Notifications are available in the Android app.</p>}
+    <p role="status">{busy ? 'Updating…' : message}</p>
+    <Link to="/connections" className="dt-notification-back">Back to connections</Link>
   </section>;
 }

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { FiDownload, FiMessageCircle, FiBell, FiMic, FiArrowUpRight } from 'react-icons/fi';
 import Footer from './Footer';
 import { androidRelease } from '../utils/androidRelease';
+import { isAndroid } from '../platform/platform';
 import '../styles/site.css';
 import '../styles/download.css';
 
@@ -57,6 +58,6 @@ export default function DownloadAndroid() {
     </section>
     </section>
     </main>
-    <Footer />
+    {!isAndroid() && <Footer />}
   </div>;
 }

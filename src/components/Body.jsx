@@ -1,8 +1,7 @@
-import { notificationsOptedIn } from '../platform/nativeNotifications';
 import { session } from '../platform/session';
 import { isAndroid } from '../platform/platform';
 import NavBar from './NavBar'
-import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Footer from './Footer'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import axios from '../platform/apiClient'
@@ -97,9 +96,8 @@ const Body = () => {
       <div className="dt-app-backdrop" aria-hidden="true" />
       <NavBar />
       <main className="dt-app-main">
-        {isAndroid() && accountId && !notificationsOptedIn() && location.pathname !== "/settings/notifications" && <aside className="dt-native-notice"><Link to="/settings/notifications">Enable private message and connection-request notifications</Link></aside>}
         {page}</main>
-      <Footer />
+      {!isAndroid() && <Footer />}
     </div>
   )
 }

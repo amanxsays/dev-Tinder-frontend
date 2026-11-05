@@ -84,3 +84,17 @@
 .dt-session-status > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .dt-session-status button { min-height: 44px; padding: 10px 16px; border: 1px solid #9bc7e83d; border-radius: 10px; background: #2a526d40; color: #d7edfd; cursor: pointer; }
 .dt-session-status button:focus-visible { outline: 2px solid #8ccfff; outline-offset: 3px; }
+.dt-notification-settings { max-width: 560px; }
+.dt-notification-row { display: flex; align-items: center; gap: 14px; margin-block: 28px; }
+.dt-notification-row > svg { flex: none; font-size: 22px; color: #a0c9e9; }
+.dt-notification-row > div { flex: 1; min-width: 0; }
+.dt-notification-row h2 { font-size: 15px; font-weight: 600; line-height: 1.5; }
+.dt-notification-row p { margin-top: 5px; color: #98adc2; font-size: 12px; line-height: 1.7; }
+.dt-session-status .dt-notification-switch { position: relative; flex: none; width: 52px; min-height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.dt-notification-switch::before { content: ''; position: absolute; inset: 8px 0; background: #354b5f; border-radius: 999px; transition: background .15s; }
+.dt-notification-switch > span { position: absolute; left: 4px; top: 12px; width: 20px; height: 20px; border-radius: 50%; background: #e2ecf6; transition: transform .15s; }
+.dt-notification-switch[aria-checked="true"]::before { background: #27825a; }
+.dt-notification-switch[aria-checked="true"] > span { transform: translateX(24px); }
+.dt-notification-switch:disabled { opacity: .5; cursor: wait; }
+.dt-notification-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; color: #b9dfff; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .dt-notification-switch::before, .dt-notification-switch > span { transition: none; } }
