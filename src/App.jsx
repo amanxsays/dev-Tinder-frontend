@@ -16,6 +16,7 @@ import AiDrawerLayout from "./components/AiDrawerLayout.jsx";
 import ChatExperienceProvider from "./components/chat/ChatExperienceProvider.jsx";
 import AiChatRoute from "./components/chat/AiChatRoute.jsx";
 import Discover from "./components/Discover.jsx";
+import DownloadAndroid from './components/DownloadAndroid.jsx';
 
 function App() {
     return (
@@ -30,6 +31,7 @@ function App() {
                                 <Route path="/" element={<Feed />} />
                                 <Route path="/discover" element={<Discover />} />
                                 <Route path="/login" element={<Login />} />
+                                <Route path="/download" element={<DownloadAndroid />} />
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/connections" element={<Connections />} />
                                 <Route path="/requests" element={<Requests />} />

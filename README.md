@@ -10,6 +10,8 @@ The same frontend now includes a Capacitor Android project in `android/`, with n
 
 See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
 
+The public `/download` page provides the Android APK link, installation instructions, version details, and SHA-256 checksum. Web visitors can reach it from **Get Android app** in the header or account menu. APKs are versioned GitHub Release assets, never committed to this repository or bundled into Netlify output. See [APK distribution](docs/android/DISTRIBUTION.md) for publishing and update steps.
+
 ## Features
 
 - **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. Web JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.

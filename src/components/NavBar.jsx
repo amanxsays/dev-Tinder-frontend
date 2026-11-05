@@ -10,7 +10,7 @@ import { removeUser } from "../utils/userSlice";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { removeFeed } from "../utils/feedSlice";
-import { FiBell, FiSearch, FiUsers, FiChevronDown } from "react-icons/fi";
+import { FiBell, FiSearch, FiUsers, FiChevronDown, FiDownload } from "react-icons/fi";
 import { removeConnections } from "../utils/connectionsSlice";
 import { addRequests, removeAllRequests } from "../utils/requestsSlice";
 import { forgetSession } from "../utils/sessionHint";
@@ -91,6 +91,9 @@ const NavBar = () => {
         <img src="/image.png" alt="" />
         <span><strong>DevTinder</strong><small>DEVELOPER NETWORK</small></span>
       </Link>
+      {!isAndroid() && <Link to="/download" className="dt-download-link" aria-label="Download DevTinder for Android">
+        <FiDownload aria-hidden="true" /><span>Get Android app</span>
+      </Link>}
       {accountId && <>
         <form className="dt-header-search" role="search" onSubmit={event => { event.preventDefault(); searchDevelopers(searchQuery); }}>
           <FiSearch aria-hidden="true" />
@@ -112,6 +115,7 @@ const NavBar = () => {
             <ul tabIndex={0} className="menu menu-sm dropdown-content dt-account-menu">
               <li><Link to="/profile">Profile</Link></li>
               <li><Link to="/settings/notifications">Notifications</Link></li>
+              {!isAndroid() && <li><Link to="/download">Get Android app</Link></li>}
               <li><button onClick={handleLogout}>Logout</button></li>
             </ul>
           </div>
