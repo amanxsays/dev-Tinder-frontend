@@ -1,4 +1,4 @@
-import { isAndroid, NativePdf } from '../platform/platform';
+import { isAndroid } from '../platform/platform';
 import { openNativePdf, closeNativePdf } from '../platform/nativePdf';
 import { useEffect, useRef, useState } from "react";
 import { getResumeUrl } from "../utils/resumeSources";
@@ -14,10 +14,8 @@ const ResumePreview = ({ source, onClose }) => {
     useEffect(() => {
         if (!isAndroid() || !url) return;
         let disposed = false;
-        let listener;
-        void NativePdf.addListener('pdfClosed', () => { if (!disposed) closeRef.current(); }).then(handle => { if (disposed) void handle.remove(); else listener = handle; });
-        void openNativePdf({ fileUrl: url, documentId, fileName }).then(() => { if (!disposed) setLoading(false); }).catch(() => { if (!disposed) { setLoading(false); setFailed(true); } });
-        return () => { disposed = true; void listener?.remove(); void closeNativePdf().catch(() => {}); };
+        void openNativePdf({ fileUrl: url, documentId, fileName }, { onClose: () => { if (!disposed) closeRef.current(); } }).then(() => { if (!disposed) setLoading(false); }).catch(() => { if (!disposed) { setLoading(false); setFailed(true); } });
+        return () => { disposed = true; void closeNativePdf().catch(() => {}); };
     }, [url, documentId, fileName]);
 
     return (

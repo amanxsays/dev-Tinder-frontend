@@ -1,12 +1,14 @@
 # Morning review - Android development build
 
+See [latest UI follow-up](UI-REVIEW.md) and the [final phone checklist](FINAL-PHONE-CHECKLIST.md) for the status-bar/layout/PDF updates that still need the final phone pass.
+
 ## Completed locally
 
 - Development Firebase configuration and the separate backend credential were verified without committing either file.
 - Real FCM notifications reached the API 36 emulator through authenticated native registration, actual Socket.IO message persistence, a local MongoDB replica set, and the durable outbox.
 - Message and connection-request notification PendingIntents opened their correct protected screens after process restart. Expired native sessions opened Login.
 - Foreground chat delivery, native logout cancellation, stale-binding rejection, and durable logout cleanup after a confirmed cold restart were checked. The offline case blocked API requests and verified the failure before logging out.
-- Frontend: 68 tests and production web build pass. Backend: 35 tests pass. Spring: 67 isolated tests pass; the production-connected application-context test remains excluded. Android: six JVM policy tests and five secure-state instrumentation tests pass; three opt-in navigation scenarios passed separately. Android lint passed in the preceding verification run.
+- Frontend: 77 tests and production web build pass. Backend: 35 tests pass. Spring: 67 isolated tests pass; the production-connected application-context test remains excluded. Android: six JVM policy tests and nine native instrumentation tests pass (five secure-state, one inset/layout and three PDF-preview tests); three opt-in navigation scenarios passed separately. Android lint passed in the preceding verification run.
 - Release checks now require an absolute keystore path, matching Gradle. An actual negative Gradle run rejected a relative path; a subsequent normal JVM test run passed.
 - `npm run android:inspect` verifies the existing APK signature, compiled package/SDK settings, checksum, and targeted credential patterns in web assets without installing or uploading it.
 
@@ -31,7 +33,7 @@ It is debug-signed and currently points at **USB-only local fixture endpoints** 
 Last inspected APK SHA-256 (changes after rebuilding):
 
 ```text
-461E41B984FE355D628784068DEE67920019983CF452A456E77892691B66F581
+FD28105993AA65ED1110434139D22E7D52D3597FF98644D2FC2B98E32F20C93D
 ```
 
 ## Decisions/setup needed before public release

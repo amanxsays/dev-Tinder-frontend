@@ -36,9 +36,9 @@ const ProfileEdit = ({ user }) => {
   };
 
   return (
-    <div className="flex justify-center gap-10">
-      <div><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle, integrations: user?.integrations} } /></div>
-      <div className="card w-96 bg-[#0f0f10] card-lg shadow-sm">
+    <div className="dt-profile-editor flex justify-center gap-10">
+      <div className="dt-profile-preview"><UserCard user={ {_id:user._id, firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle, integrations: user?.integrations} } /></div>
+      <div className="dt-profile-form card w-96 bg-[#0f0f10] card-lg shadow-sm">
         <form className="card-body" onSubmit={(e) =>{
           e.preventDefault();
           handleUpdate();

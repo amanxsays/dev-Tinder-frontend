@@ -1,5 +1,6 @@
 import axios from "../platform/apiClient";
 import { useState } from "react";
+import UserAvatar from './UserAvatar';
 import { useDispatch, useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { toast } from "react-toastify";
@@ -14,7 +15,7 @@ import {
 import { SiLeetcode, SiCodeforces } from "react-icons/si";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  motion,
+  motion as Motion,
   useAnimation,
   useMotionValue,
   useTransform,
@@ -197,12 +198,12 @@ const UserCard = ({ user }) => {
   return (
     <div className="relative flex justify-center">
       {!isProfilePage && (
-        <motion.div
+        <Motion.div
           style={{ backgroundColor }}
           className="fixed inset-0 z-0 pointer-events-none transition-colors duration-300"
         />
       )}
-      <motion.div
+      <Motion.div
         animate={controls}
         style={{ x, rotate, opacity }}
         drag={!isProfilePage ? "x" : false}
@@ -214,29 +215,24 @@ const UserCard = ({ user }) => {
       >
         {!isProfilePage && (
           <>
-            <motion.div
+            <Motion.div
               style={{ opacity: interestedOpacity }}
               className="absolute top-10 left-6 z-30 border-4 border-green-500 text-green-500 font-black text-2xl px-2 py-1 rounded-md rotate-[-20deg] pointer-events-none"
             >
               INTERESTED
-            </motion.div>
-            <motion.div
+            </Motion.div>
+            <Motion.div
               style={{ opacity: ignoreOpacity }}
               className="absolute top-10 right-6 z-30 border-4 border-red-500 text-red-500 font-black text-2xl px-2 py-1 rounded-md rotate-[20deg] pointer-events-none"
             >
               IGNORE
-            </motion.div>
+            </Motion.div>
           </>
         )}
         <div className="card bg-[#0f0f0f] w-72 md:w-80 shadow-2xl border border-gray-800 overflow-hidden">
           <div className="relative h-72 md:h-80 w-full overflow-hidden">
-            <img
-              src={photoUrl || "https://via.placeholder.com/300"}
-              alt="user"
-              draggable="false"
-              className="w-full h-full object-cover pointer-events-none"
-            />
-            <motion.div
+            <UserAvatar user={{ firstName, lastName, photoUrl }} className="dt-avatar-hero w-full h-full object-cover pointer-events-none" />
+            <Motion.div
               onTap={() => navigate(`/profile/${_id}`)}
               className="absolute inset-0 z-20 cursor-pointer bg-transparent"
             />
@@ -566,7 +562,7 @@ const UserCard = ({ user }) => {
             )}
           </div>
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 };

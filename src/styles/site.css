@@ -51,6 +51,9 @@
 .dt-account { margin-left: 6px; padding-left: 14px; border-left: 1px solid #aacbec17; }
 .dt-account-button.btn { display: flex; align-items: center; gap: 8px; height: 44px; min-height: 44px; padding: 0 4px; border: 0; border-radius: 10px; color: #a2b6cc; box-shadow: none; background: transparent; }
 .dt-account-button img { width: 36px; height: 36px; border-radius: 11px; object-fit: cover; border: 1px solid #c4e5ff30; }
+.dt-account-button .dt-user-avatar { width: 36px; height: 36px; border-radius: 11px; border: 1px solid #c4e5ff30; }
+.dt-avatar-fallback { display: grid; place-items: center; overflow: hidden; background: #213c53; color: #c0e3fc; font-size: 18px; font-weight: 600; line-height: 1; }
+.dt-avatar-hero.dt-avatar-fallback { font-size: clamp(56px, 16vw, 80px); background: radial-gradient(ellipse at 25% 20%, #254c68, #14283b 70%); color: #b8dcf5; }
 .dt-account-menu { z-index: 55; margin-top: 14px; width: 192px; padding: 8px; border: 1px solid #b8d9f824; border-radius: 14px; color: #cfdeee; background: #172331; box-shadow: 0 16px 40px #0005; }
 .dt-account-menu a, .dt-account-menu button { min-height: 42px; border-radius: 8px; }
 .dt-site-header a:focus-visible, .dt-site-header button:focus-visible { outline: 2px solid #8ccfff; outline-offset: 3px; }

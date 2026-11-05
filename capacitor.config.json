@@ -5,6 +5,7 @@
   "server": { "hostname": "localhost", "androidScheme": "https", "cleartext": false },
   "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false },
   "plugins": {
+    "SystemBars": { "insetsHandling": "css", "initialViewportFitValueHint": "cover", "style": "DARK" },
     "CapacitorHttp": { "enabled": false },
     "CapacitorCookies": { "enabled": false },
     "SplashScreen": { "launchAutoHide": true, "backgroundColor": "#0c1520", "showSpinner": false }

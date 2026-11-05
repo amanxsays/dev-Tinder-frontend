@@ -27,14 +27,20 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 /** One-page-at-a-time renderer; no remote viewer or public PDF cache. */
 public final class PdfPreviewDialog extends Dialog {
+    interface ConnectionFactory { HttpURLConnection open(URL target) throws java.io.IOException; }
     private static final long MAX_BYTES = 5L * 1024 * 1024;
     private final Activity activity;
     private final ExecutorService worker;
     private final String url, fileName;
     private final Runnable onClosed;
+    private final ConnectionFactory connections;
     private final AtomicInteger generation = new AtomicInteger();
     private volatile HttpURLConnection connection;
     private volatile boolean closed;
@@ -50,15 +56,31 @@ public final class PdfPreviewDialog extends Dialog {
     private Bitmap bitmap;
 
     public PdfPreviewDialog(Activity activity, ExecutorService worker, String url, String fileName, Runnable onClosed) {
+        this(activity, worker, url, fileName, onClosed, target -> (HttpURLConnection) target.openConnection());
+    }
+    PdfPreviewDialog(Activity activity, ExecutorService worker, String url, String fileName, Runnable onClosed, ConnectionFactory connections) {
         super(activity, android.R.style.Theme_Material_NoActionBar);
         this.activity = activity; this.worker = worker; this.url = url; this.fileName = fileName; this.onClosed = onClosed;
+        this.connections = connections;
     }
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         Window window = getWindow();
-        if (window != null) { window.addFlags(WindowManager.LayoutParams.FLAG_SECURE); window.setStatusBarColor(Color.rgb(12,21,32)); }
+        if (window != null) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            window.setStatusBarColor(Color.rgb(12,21,32));
+            WindowCompat.setDecorFitsSystemWindows(window, false);
+            WindowCompat.getInsetsController(window, window.getDecorView()).setAppearanceLightStatusBars(false);
+            WindowCompat.getInsetsController(window, window.getDecorView()).setAppearanceLightNavigationBars(false);
+        }
         LinearLayout layout = new LinearLayout(activity); layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(20, 32, 20, 20); layout.setBackgroundColor(Color.rgb(12,21,32));
+        int spacing = Math.round(16 * activity.getResources().getDisplayMetrics().density);
+        layout.setPadding(spacing, spacing, spacing, spacing); layout.setBackgroundColor(Color.rgb(12,21,32));
+        ViewCompat.setOnApplyWindowInsetsListener(layout, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            view.setPadding(spacing + bars.left, spacing + bars.top, spacing + bars.right, spacing + bars.bottom);
+            return insets;
+        });
         TextView title = new TextView(activity); title.setText(fileName); title.setTextSize(18); title.setTextColor(Color.WHITE);
         layout.addView(title);
         Button close = button("Back to chat", v -> dismiss()); layout.addView(close);
@@ -81,7 +103,7 @@ public final class PdfPreviewDialog extends Dialog {
             try { activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
             catch (Exception ignored) { status.setText("No browser is available to open this PDF."); }
         }); layout.addView(fallback);
-        setContentView(layout); controlsEnabled(false);
+        setContentView(layout); ViewCompat.requestApplyInsets(layout); controlsEnabled(false);
         worker.execute(this::download);
     }
     private Button button(String text, View.OnClickListener click) {
@@ -99,7 +121,7 @@ public final class PdfPreviewDialog extends Dialog {
                 if (!"https".equalsIgnoreCase(target.getProtocol()) || !"res.cloudinary.com".equalsIgnoreCase(target.getHost())
                     || target.getUserInfo() != null || (target.getPort() != -1 && target.getPort() != 443)
                     || !target.getPath().contains("/raw/upload/")) throw new IllegalArgumentException("Unsupported resume URL");
-                connection = (HttpURLConnection) target.openConnection();
+                connection = connections.open(target);
                 connection.setInstanceFollowRedirects(false); connection.setConnectTimeout(15000); connection.setReadTimeout(20000);
                 int code = connection.getResponseCode();
                 if (code >= 300 && code < 400) {

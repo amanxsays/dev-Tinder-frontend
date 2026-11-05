@@ -2,7 +2,7 @@
 
 ## Verified locally
 
-- Frontend: 68 Node tests pass; focused ESLint passes; normal Vite website build passes.
+- Frontend: 77 Node tests pass; focused ESLint passes; normal Vite website build passes.
 - Backend: 35 Node tests pass. Existing dependency audit findings remain; unused
   optional Firebase Firestore/Storage dependencies are excluded by backend `.npmrc`.
 - Spring: 67 isolated unit/controller tests pass with JDK 25. The production-connected
@@ -60,6 +60,10 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 - Frontend Node tests: 68 passing, including six setup-preflight tests. Backend Node tests: 34 passing, including three validation-only Firebase setup tests.
 
 ## Repeatable local commands
+
+### Android UI and PDF follow-up
+
+See [UI-REVIEW.md](UI-REVIEW.md) for the latest 77 frontend tests, responsive/keyboard fixture checks, native safe-area geometry, nine passing emulator instrumentation tests (including three generated-PDF tests), and real development FCM regression flow. This newer UI requires a final phone pass; the earlier physical-phone record is a baseline. [FINAL-PHONE-CHECKLIST.md](FINAL-PHONE-CHECKLIST.md) separates device checks from production rollout/signing prerequisites.
 
 ### Physical phone follow-up
 

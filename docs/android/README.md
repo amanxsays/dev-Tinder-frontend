@@ -4,6 +4,10 @@ The Android application bundles the same React UI as the website through Capacit
 
 Start with the [morning review checklist](MORNING-CHECKLIST.md) for completed verification, the current debug APK, and owner/device tasks still pending.
 
+After installing the latest UI build, use the [final phone checklist](FINAL-PHONE-CHECKLIST.md). It includes the untethered-service prerequisites and the updated status-bar, keyboard, profile, messaging, voice and resume checks.
+
+See [UI follow-up and local verification](UI-REVIEW.md) for the screenshot-driven safe-area fix, Android form/card polish and native PDF lifecycle tests.
+
 ## Requirements
 
 - Node 22+, npm, Android Studio 2025.2.1 or later, Android SDK Platform 36 and Build Tools 36.

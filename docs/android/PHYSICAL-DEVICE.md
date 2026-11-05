@@ -2,6 +2,8 @@
 
 Development build tested on an I2219 phone running Android 16/API 36 with Android System WebView 156.0.8078.47. The device serial, FCM token, installation capability, and private credentials are deliberately omitted.
 
+This report covers the positive-path baseline before the subsequent safe-area/auth/profile/PDF UI improvements. Retest the updated APK using [FINAL-PHONE-CHECKLIST.md](FINAL-PHONE-CHECKLIST.md); do not treat earlier device observations as proof of every newer screen.
+
 ## Setup and scope
 
 - Package: `com.amanxsays.devtinder.debug`; debug-signed, bundled frontend.

@@ -48,6 +48,28 @@
   box-shadow: 0 24px 80px #0005, 0 1px 0 #ffffff05 inset;
 }
 
+.dt-auth-content { display: flex; justify-content: center; padding-top: 32px; }
+.dt-auth-card .card-body { padding: 28px; gap: 22px; }
+.dt-auth-intro h1 { font-size: 26px; line-height: 1.25; font-weight: 650; letter-spacing: -.035em; }
+.dt-auth-intro p { margin-top: 8px; color: #9fb2c7; font-size: 14px; line-height: 1.6; }
+.dt-auth-field { display: grid; gap: 9px; min-width: 0; }
+.dt-auth-field[hidden], .dt-auth-name-fields[hidden] { display: none; }
+.dt-auth-field label { display: flex; align-items: center; gap: 8px; color: #c6d5e6; font-size: 13px; font-weight: 550; }
+.dt-auth-field label svg { width: 17px; height: 17px; color: #8daac6; flex: none; }
+.dt-auth-name-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dt-auth-card .input { min-width: 0; min-height: 48px; border-radius: 10px; padding-inline: 14px; font-size: 16px; }
+.dt-auth-password { display: flex; align-items: stretch; position: relative; }
+.dt-auth-password .input { padding-right: 52px; }
+.dt-password-toggle { position: absolute; z-index: 2; right: 2px; top: 2px; bottom: 2px; width: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; color: #abc1d8; background: transparent; cursor: pointer; }
+.dt-password-toggle:hover { background: #b6d9ff0d; }
+.dt-password-toggle svg { width: 20px; height: 20px; }
+.dt-auth-actions { display: grid; gap: 18px; margin-top: 4px; }
+.dt-auth-submit.btn { width: 100%; min-height: 48px; border-radius: 10px; background: linear-gradient(120deg, #176db8, #154784); border: 1px solid #8fc8ff45; font-size: 15px; font-weight: 600; }
+.dt-auth-submit.btn:hover { background: linear-gradient(120deg, #207ecb, #195799); }
+.dt-auth-switch { justify-self: center; padding: 8px 0; min-height: 44px; color: #9fb2c7; font-size: 13px; text-align: center; cursor: pointer; }
+.dt-auth-switch span { margin-left: 4px; color: #83c9ff; font-weight: 600; }
+.dt-auth-card button:focus-visible { outline: 2px solid #83c9ff; outline-offset: 3px; }
+
 .dt-auth-card .input {
   width: 100%;
   background: #1b2633;

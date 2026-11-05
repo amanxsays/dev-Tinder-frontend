@@ -22,6 +22,7 @@ public class PdfPlugin extends Plugin {
     }
     @PluginMethod public void open(PluginCall call) {
         String url = call.getString("url", ""), fileName = call.getString("fileName", "Resume.pdf");
+        String previewId = call.getString("previewId", "");
         Uri uri = Uri.parse(url);
         if (!"https".equalsIgnoreCase(uri.getScheme()) || !"res.cloudinary.com".equalsIgnoreCase(uri.getHost())
             || uri.getUserInfo() != null || (uri.getPort() != -1 && uri.getPort() != 443)
@@ -32,7 +33,7 @@ public class PdfPlugin extends Plugin {
             closeDialog();
             dialog = new PdfPreviewDialog(getActivity(), worker, url, fileName, () -> {
                 dialog = null;
-                JSObject data = new JSObject(); data.put("closed", true); notifyListeners("pdfClosed", data);
+                JSObject data = new JSObject(); data.put("closed", true); data.put("previewId", previewId); notifyListeners("pdfClosed", data);
             });
             dialog.show();
             JSObject data = new JSObject(); data.put("opened", true); call.resolve(data);

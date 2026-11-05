@@ -81,7 +81,6 @@ export default function AndroidLifecycle() {
       disposed = true;
       handles.forEach(handle => void handle.remove());
       releaseLinks();
-      document.documentElement.classList.remove('dt-android');
       window.removeEventListener('devtinder:session-expired', expired);
       window.removeEventListener('online', online);
     };
