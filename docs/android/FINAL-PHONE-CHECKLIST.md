@@ -2,7 +2,7 @@
 
 ## Build and service prerequisites
 
-Production APK 1.0 is published through the website's download page and uses the deployed HTTPS services. The latest source changes target **1.0.1 / version code 2**: a system notification prompt after sign-in, compact notification settings, no opt-in banner, and no website footer inside Android. These changes are not in the published 1.0 APK. Sign and inspect the new build with the existing permanent key before distributing it.
+Production APK **1.0.1 / version code 2** is signed and published, with a system notification prompt after sign-in, compact notification settings, no opt-in banner, and no website footer inside Android. It uses the deployed HTTPS services and the same package/signing certificate as 1.0. Release inspection and anonymous artifact checksum verification passed; the final physical-device upgrade and new permission-dialog checks below are still pending.
 
 The compatible Node/Spring rollout, production Firebase setup, signing-key creation, and initial website download release are complete. The new APK must use the same application ID and key, with the increased version code, so users can update without uninstalling. `powershell -NoProfile -File scripts/build-signed-android.ps1` builds with the current public HTTPS endpoints and asks for the signing password privately.
 
