@@ -35,7 +35,7 @@ On Windows, `npm run android:inspect` verifies the existing debug APK signature,
 
 ## APK distribution first
 
-After approval, publish the signed APK as a versioned release asset with version, checksum, minimum Android version, installation instructions, privacy information, and known limitations. A website download link should point to that asset. Do not commit APK files or repeatedly bundle them into the Netlify web output.
+After approval, publish the signed APK as a versioned release asset with version, checksum, minimum Android version, installation instructions, privacy information, and known limitations. The website build mirrors the verified asset into `dist/downloads/`, and the main download button points to this same-site Netlify file to avoid cross-site browser download handoffs. GitHub remains a fallback. Never commit APK files to Git or include this mirror in the native app bundle. See DISTRIBUTION.md for the build-integrity checks and required headers.
 
 APK updates are separate from website deployments. Installed apps keep their bundled frontend until the user installs a newer compatible APK. Preserve backward-compatible server contracts during this period.
 
