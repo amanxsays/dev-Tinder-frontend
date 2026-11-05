@@ -8,7 +8,7 @@ This repository is the frontend. The Express API and Spring Boot integration ser
 
 The same frontend now includes a Capacitor Android project in `android/`, with native secure sessions, dictation, Read aloud, private PDF preview, and Firebase notification bridges. Web builds still produce `dist/`; Android bundles produce `dist-android/`. APK updates are separate from Netlify deployments.
 
-Android uses the system notification permission dialog once after sign-in, remembers denial and explicit opt-outs, and offers a compact notification switch in Settings. The website footer is hidden inside Android. These changes are prepared for app version 1.0.1 (version code 2); the published APK remains 1.0 until the new build is signed, verified and released.
+Android 1.0.1 (version code 2) uses the system notification permission dialog once after sign-in, remembers denial and explicit opt-outs, and offers a compact notification switch in Settings. The website footer is hidden inside Android. Install the latest APK over version 1.0 to receive these changes; website updates alone do not update an installed app.
 
 See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
 

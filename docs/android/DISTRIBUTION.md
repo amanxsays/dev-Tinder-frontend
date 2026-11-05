@@ -6,7 +6,19 @@ The download route has its own static layout outside the application lifecycle. 
 
 Share `https://devtinderfront.netlify.app/download` directly with phone or desktop users. They do not need an account to view the page or download the APK. An account is required only when signing into the installed app.
 
-## Initial artifact
+## Current release: 1.0.1
+
+- Package: `com.amanxsays.devtinder`; version name `1.0.1`, version code `2`.
+- Source: `649359930e69154baba8245ed7371d5af7b6b599`.
+- Release tag: `android-v1.0.1`; asset `DevTinder-1.0.1.apk`, 5,687,817 bytes.
+- SHA-256: `f015bef22bd2f7027647ad2767226199198bfd43f5360f2430adf40cd865e9d2`.
+- Signing certificate SHA-256 remains `aab1071e2f3d8c0e454946bdd598d99d91e3b669f892e9000a6f0ccd3e113ed0`.
+- Primary: `https://devtinderfront.netlify.app/downloads/DevTinder-1.0.1.apk`.
+- Alternative: `https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.1/DevTinder-1.0.1.apk`.
+
+This release simplifies Android notification onboarding/settings and removes the website footer inside Android. Release inspection confirmed the production bundle, matching permanent signing certificate, increased version code, package identity, live HTTPS endpoints and targeted credential scan. The public GitHub artifact was downloaded anonymously and matched the checksum. Physical-device 1.0.1 upgrade/system-dialog confirmation remains pending; users should install over 1.0 without uninstalling.
+
+## Initial artifact: 1.0
 
 - App: DevTinder 1.0, version code 1; package `com.amanxsays.devtinder`.
 - Minimum Android: 8.0 (API 26); target API 36.
@@ -34,7 +46,7 @@ No Firebase Admin JSON, signing key, password file, `.env`, or Android client co
 
 ## Future updates
 
-Increase Android `versionCode`, set the new `versionName`, build with the same application ID and permanent signing key, inspect and test an upgrade without uninstalling, then publish a new tag and asset name. Update `src/utils/androidRelease.js`, the displayed version/size in `src/components/DownloadAndroid.jsx`, and the exact APK path/filename in `public/_headers` together. Keep previous GitHub release assets available until intentionally retired. The current Netlify output mirrors only the pinned version; older direct Netlify paths may stop working after an update.
+Increase Android `versionCode`, set the new `versionName`, build with the same application ID and permanent signing key, inspect and test an upgrade without uninstalling, then publish a new tag and asset name. Update `src/utils/androidRelease.js`, the displayed version/size in `src/components/DownloadAndroid.jsx`, and the exact APK path/filename in `public/_headers` together. Keep previous GitHub release assets available until intentionally retired. The current Netlify output mirrors only the pinned version; `public/_redirects` sends the older 1.0 APK path to its preserved GitHub release instead of the SPA fallback. Add an explicit old-path redirect when retiring each subsequent Netlify mirror.
 
 Website deployments and backend deployments do not replace the app's bundled frontend. Users install updated APKs manually. No automatic updater or Google Play publishing is part of this change.
 
