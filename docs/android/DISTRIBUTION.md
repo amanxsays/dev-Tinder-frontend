@@ -2,6 +2,8 @@
 
 The existing Netlify frontend serves `/download` as a public route. It works without login, including when Render is sleeping. The browser header links to it; the native app hides this download navigation. No new Netlify project or service is needed. Keep the existing `npm run build`, `dist` publish directory, and SPA rewrite.
 
+The download route has its own static layout outside the application lifecycle. It does not mount session restoration, request polling, AI source validation, or native notification setup, and does not issue a Spring warm-up ping. Opening the main app or Login mounts the normal application and starts its existing startup checks. Requests already sent before navigating away from the main app cannot be unsent.
+
 Share `https://devtinderfront.netlify.app/download` directly with phone or desktop users. They do not need an account to view the page or download the APK. An account is required only when signing into the installed app.
 
 ## Initial artifact
