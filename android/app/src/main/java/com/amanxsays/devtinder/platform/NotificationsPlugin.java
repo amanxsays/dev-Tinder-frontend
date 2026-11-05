@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.provider.Settings;
 import androidx.core.app.NotificationManagerCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -62,6 +63,14 @@ public class NotificationsPlugin extends Plugin {
         getState(call);
     }
     @PermissionCallback private void notificationPermissionResult(PluginCall call) { getState(call); }
+    @PluginMethod public void openSettings(PluginCall call) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+            getActivity().startActivity(intent);
+            call.resolve();
+        } catch (Exception error) { call.reject("Could not open notification settings.", "PUSH_SETTINGS_FAILED"); }
+    }
     @PluginMethod public void getToken(PluginCall call) {
         if (!"granted".equals(permission())) { call.reject("Enable notifications first.", "PUSH_PERMISSION_REQUIRED"); return; }
         try {

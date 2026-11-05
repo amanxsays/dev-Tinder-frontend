@@ -2,11 +2,15 @@
 
 ## Build and service prerequisites
 
-The updated client bundles the frontend and includes the approved Android features. The current locally generated APK is still **a debug build for local services**, not a public release. Its API endpoints are device localhost ports 17777 and 18080. Those endpoints require running isolated services plus USB reverse forwarding; unplugging the phone disconnects that test setup.
+Production APK 1.0 is published through the website's download page and uses the deployed HTTPS services. The latest source changes target **1.0.1 / version code 2**: a system notification prompt after sign-in, compact notification settings, no opt-in banner, and no website footer inside Android. These changes are not in the published 1.0 APK. Sign and inspect the new build with the existing permanent key before distributing it.
 
-For a final test away from USB, first deploy the compatible frontend/Node/Spring changes to the existing services through a separately reviewed rollout, configure matching Firebase client/server projects and notification environments, and rebuild with the public HTTPS API URLs. Production Firebase configuration and a retained release signing identity are still owner setup tasks. No live deployment, production environment, or website download link was changed in this UI pass.
+The compatible Node/Spring rollout, production Firebase setup, signing-key creation, and initial website download release are complete. The new APK must use the same application ID and key, with the increased version code, so users can update without uninstalling. `powershell -NoProfile -File scripts/build-signed-android.ps1` builds with the current public HTTPS endpoints and asks for the signing password privately.
 
-Install the **updated** APK before checking the list below. The earlier phone build does not contain the new safe-area and layout fixes. Use disposable test users and a non-sensitive PDF. Keep private credentials out of chat and Git.
+Install the **updated** APK before checking the list below. Version 1.0 has the prior safe-area fixes but does not contain the new notification and footer changes. Use disposable test users and a non-sensitive PDF. Keep private credentials out of chat and Git.
+
+For 1.0.1 specifically: on Android 13+, a new install asks through the standard Android dialog after sign-in; Allow registers the device, denial/dismissal does not repeatedly prompt, and an already-granted upgrade does not ask again. An explicit in-app opt-out stays off. Verify the single Settings switch and the Android Settings shortcut when permission is blocked. The app footer and old opt-in banner should be absent on login, feed, profile and settings. Earlier Android versions may already grant notification access without a runtime dialog. See [Android's permission behavior](https://developer.android.com/develop/ui/views/notifications/notification-permission).
+
+Local verification for these changes: 87 Node tests passed, including onboarding deduplication, denial, prior permission/opt-out and account-switch cases; web production build and focused ESLint passed; Android debug assembly, JVM tests and lint passed. A browser with a simulated native bridge verified one prompt, registration after Allow, toggle opt-out, no banner/footer and a 360px layout. This does not replace testing the real Android system dialog on the newly signed APK.
 
 ## What changed
 

@@ -7,7 +7,7 @@ import { isAndroid, NativeNotifications } from '../platform/platform';
 import { session } from '../platform/session';
 import { installExternalLinks } from '../platform/externalLinks';
 import { closeNativePdf, nativePdfActive } from '../platform/nativePdf';
-import { enableNotifications, notificationDestination, notificationsOptedIn, rotateNotificationToken, retryNotificationCleanup } from '../platform/nativeNotifications';
+import { onboardNotifications, notificationDestination, rotateNotificationToken, retryNotificationCleanup } from '../platform/nativeNotifications';
 import { forgetSession } from '../utils/sessionHint';
 import { removeUser } from '../utils/userSlice';
 import { removeFeed } from '../utils/feedSlice';
@@ -90,7 +90,7 @@ export default function AndroidLifecycle() {
     if (!isAndroid()) return;
     const targetUserId = accountId && session.token() ? location.pathname.match(/^\/chat\/([a-f0-9]{24})$/i)?.[1] || '' : '';
     void NativeNotifications.setContext({ active: !document.hidden, targetUserId }).catch(() => {});
-    if (accountId && notificationsOptedIn()) void enableNotifications(accountId).catch(() => {});
+    if (accountId) void onboardNotifications(accountId).catch(() => {});
     if (!accountId) return;
     const remaining = Date.parse(session.snapshot()?.expiresAt) - Date.now();
     const timer = setTimeout(() => window.dispatchEvent(new Event('devtinder:session-expired')), Math.max(0, remaining || 0));

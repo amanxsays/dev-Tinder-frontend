@@ -6,7 +6,42 @@ import { session } from './session.js';
 const objectId = /^[a-f0-9]{24}$/i;
 const optInKey = 'devtinder.notifications-opt-in';
 export function notificationsOptedIn() { try { return localStorage.getItem(optInKey) === 'true'; } catch { return false; } }
+export function notificationPreference() {
+  try { const value = localStorage.getItem(optInKey); return value === null ? null : value === 'true'; }
+  catch { return false; }
+}
 export function setNotificationsOptIn(value) { try { localStorage.setItem(optInKey, String(Boolean(value))); } catch { /* Permission UI remains available. */ } }
+
+// Ask once after authentication, using only Android's system permission dialog.
+// A stored false is an explicit opt-out or a previous dismissed/denied prompt.
+export function createNotificationOnboarding({ native, getPreference, setPreference, getState, requestPermission, enable, getSession }) {
+  let pending = null;
+  const onboard = userId => {
+    const current = () => getSession().userId === userId && Boolean(getSession().token);
+    if (!native() || !userId || !current()) return Promise.resolve(null);
+    if (pending) return pending.userId === userId ? pending.promise : pending.promise.catch(() => {}).then(() => onboard(userId));
+    const promise = (async () => {
+      if (getPreference() === false) return null;
+      let state = await getState();
+      if (!current()) return null;
+      if (getPreference() === null) {
+        setPreference(false);
+        if (state.permission === 'prompt') {
+          await requestPermission();
+          state = await getState();
+        }
+        if (!current() || state.permission !== 'granted') return null;
+        setPreference(true);
+      }
+      if (state.permission !== 'granted' || !current()) return null;
+      return enable(userId);
+    })();
+    pending = { userId, promise };
+    void promise.finally(() => { if (pending?.promise === promise) pending = null; }).catch(() => {});
+    return promise;
+  };
+  return onboard;
+}
 export function notificationDestination(payload, binding, accountId, now = Date.now()) {
   if (!payload || !binding?.bindingId || payload.bindingId !== binding.bindingId
     || binding.userId !== accountId || !(Date.parse(payload.expiresAt) > now)
@@ -110,3 +145,8 @@ export const enableNotifications = (...args) => manager.enable(...args);
 export const disableNotifications = (...args) => manager.disable(...args);
 export const rotateNotificationToken = (...args) => manager.rotate(...args);
 export const retryNotificationCleanup = (...args) => manager.retryCleanup(...args);
+export const onboardNotifications = createNotificationOnboarding({
+  native: isAndroid, getPreference: notificationPreference, setPreference: setNotificationsOptIn,
+  getState: getNotificationState, requestPermission: () => NativeNotifications.requestPermission(),
+  enable: enableNotifications, getSession: () => ({ userId: session.snapshot()?.userId, token: session.token() }),
+});
