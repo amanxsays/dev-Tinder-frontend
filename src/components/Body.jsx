@@ -69,9 +69,7 @@ const Body = () => {
 
   const returnTo = location.pathname + location.search + location.hash
   let page
-  if (location.pathname === '/download' || location.pathname === '/download/') {
-    page = <Outlet />
-  } else if (accountId) {
+  if (accountId) {
     page = <Outlet />
   } else if (location.pathname === '/login') {
     page = <Outlet context={{ startManualAuth }} />
