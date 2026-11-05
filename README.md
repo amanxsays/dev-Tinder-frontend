@@ -10,7 +10,7 @@ The same frontend now includes a Capacitor Android project in `android/`, with n
 
 See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
 
-The public `/download` page provides the Android APK link and short installation steps, with extra help and release details collapsed. It mounts independently of session checks and backend warm-up, so downloading does not wake Render. Web visitors can reach it from **Get Android app** in the header or account menu. APKs are versioned GitHub Release assets, never committed to this repository or bundled into Netlify output. See [APK distribution](docs/android/DISTRIBUTION.md) for publishing and update steps.
+The public `/download` page provides the Android APK link and short installation steps, with extra help and release details collapsed. It mounts independently of session checks and backend warm-up, so downloading does not wake Render. Web visitors can reach it from **Get Android app** in the header or account menu. Web builds download the versioned GitHub Release asset, verify its size and SHA-256, and mirror it into `dist/downloads/` for a direct same-site Netlify download. No APK is committed to Git or copied into the native app bundle. GitHub remains an alternative download. See [APK distribution](docs/android/DISTRIBUTION.md) for publishing and update steps.
 
 ## Features
 

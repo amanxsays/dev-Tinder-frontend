@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
 import { FiDownload, FiMessageCircle, FiBell, FiMic, FiArrowUpRight } from 'react-icons/fi';
 import Footer from './Footer';
+import { androidRelease } from '../utils/androidRelease';
 import '../styles/site.css';
 import '../styles/download.css';
 
 const releaseUrl = 'https://github.com/amanxsays/dev-Tinder-frontend/releases/tag/android-v1.0.0';
-const apkUrl = 'https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.0/DevTinder-1.0.0.apk';
-const checksum = '9c1751a457585713c4537e2535c2084f1679d803ef64d9f45023535f60368359';
 
 export default function DownloadAndroid() {
   return <div className="dt-app-frame">
@@ -25,7 +24,7 @@ export default function DownloadAndroid() {
         <p className="dt-download-eyebrow">DEVTINDER FOR ANDROID</p>
         <h1 id="android-title">Your developer network.<br />Now in your pocket.</h1>
         <p>Connect with developers, chat with your network, and take your AI recruiter with you.</p>
-        <a className="dt-download-primary" href={apkUrl}><FiDownload aria-hidden="true" />Download Android APK</a>
+        <a className="dt-download-primary" href={androidRelease.downloadPath} download={androidRelease.filename}><FiDownload aria-hidden="true" />Download Android APK</a>
         <p className="dt-download-meta">Version 1.0 · 5.4 MB · Android 8.0 or later</p>
         <Link className="dt-download-web" to="/">Continue on the web <FiArrowUpRight aria-hidden="true" /></Link>
       </div>
@@ -51,8 +50,9 @@ export default function DownloadAndroid() {
           <p>If Android asks, allow your browser to install this app, then tap Install. You can switch that permission off afterward. This is a direct download, separate from Google Play.</p>
           <p>Come back here for new APK versions; installed apps do not update automatically. On iPhone or desktop, use the web app.</p>
           <p>Microphone and notifications are optional. Your device’s speech service may process dictation. Notifications use generic previews and can be delayed.</p>
+          <p><a href={androidRelease.sourceUrl}>Try the alternative download <FiArrowUpRight aria-hidden="true" /></a></p>
           <a href={releaseUrl}>Release notes and checksum file <FiArrowUpRight aria-hidden="true" /></a>
-          <details><summary>APK SHA-256 checksum</summary><code>{checksum}</code></details>
+          <details><summary>APK SHA-256 checksum</summary><code>{androidRelease.sha256}</code></details>
         </details>
     </section>
     </section>
