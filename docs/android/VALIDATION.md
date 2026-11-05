@@ -34,12 +34,12 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 ## Release gates still outstanding
 
 - Production Firebase client files and server credentials are not supplied. Development Firebase inputs have been verified locally.
-- Physical-phone push delivery/taps, microphone, native TTS engine, and real-phone battery
-  behavior remain release checks. Emulator success does not establish those capabilities.
+- Extended phone permission/interruption/PDF/device matrices and real-phone battery
+  behavior remain release checks. Initial physical positive-path results are recorded in PHYSICAL-DEVICE.md.
 - Production signing identity and website APK download publishing remain unset.
 - Release preflight was tested and correctly refuses to proceed without production
   Firebase client configuration. The local APK is debug-signed and configured for
-  emulator-only local fixtures on ports 17777 and 18080, not a production release.
+  USB-reversed local fixtures on ports 17777 and 18080, not a production release.
 - The new backend/mobile routes and coordinated signed AI gateway must be deployed
   before an Android build targets production. Existing deployments are unchanged.
 - A MongoDB credential previously present in Spring's tracked configuration was moved
@@ -56,10 +56,14 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 - The actual message notification PendingIntent restored the native session and opened the sender's conversation with persisted history. The connection-request PendingIntent opened Requests with the saved fixture requester visible. Both passed after the instrumentation runner restarted the target process. A connection-request push was received after the preceding app process exited. These tests did not force-stop the package through Android settings.
 - An intentionally expired native session opened Login through the notification PendingIntent. The four native secure-state tests passed, including consume-once and stale-binding rejection. The three opt-in navigation scenarios passed individually; the navigation test skips without fixture arguments.
 - An active conversation received its live Socket.IO message; no duplicate notification was observed in the following five seconds. A separate test verified API-request blocking before logout, immediate native binding removal, retained encrypted cleanup, and a remote registration still enabled during the outage. After a confirmed cold restart (new process ID), the app retried cleanup and disabled that registration in the isolated database.
-- Physical-phone behavior, manual system-tray taps, comprehensive account/device matrices, and battery restrictions remain unverified. No live hosting settings were changed and no credential or Firebase configuration file was committed. Repeatable device/instrumentation instructions are in [TESTING.md](TESTING.md).
+- At the initial emulator stage, physical-phone behavior and manual tray taps were still unverified; the later physical follow-up below records completed positive-path checks. Comprehensive account/device matrices and battery restrictions remain pending. No live hosting settings were changed and no credential or Firebase configuration file was committed. Repeatable instructions are in [TESTING.md](TESTING.md).
 - Frontend Node tests: 68 passing, including six setup-preflight tests. Backend Node tests: 34 passing, including three validation-only Firebase setup tests.
 
 ## Repeatable local commands
+
+### Physical phone follow-up
+
+An I2219/Android 16 phone with WebView 156.0.8078.47 passed native login and ten-day storage, actual FCM message/request notifications and system-tray taps, microphone dictation to an editable unsent draft, explicit single-message persistence, Read aloud, saved-login restoration, and logout persistence. The backend also confirmed all fixture installations disabled after logout. The AI answer was an explicit local SSE fixture, not a production provider response. See [PHYSICAL-DEVICE.md](PHYSICAL-DEVICE.md) for evidence, limits and remaining cases. The current debug APK was rebuilt for USB-reversed localhost ports; artifact inspection passed and the checklist checksum was updated. Production is unchanged.
 
 ### Ten-day Android session update
 

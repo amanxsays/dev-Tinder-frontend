@@ -12,13 +12,11 @@
 
 All implementation changes remain on `feature/android-fcm`. Existing Netlify/Render services, production databases, and main/master branches were not changed. Temporary test services and emulators are stopped when verification ends.
 
-## First thing for you: connect a phone
+## Phone connected and initial checks complete
 
-1. Use an Android phone with Google Play services and a current Android System WebView.
-2. Enable Developer options and USB debugging, connect it by USB, and approve the computer prompt.
-3. Tell me that the phone is connected. We will use development Firebase and disposable local users for testing.
+The physical I2219/Android 16 phone passed notification grant, message/request system-tray taps, dictation review, explicit Send, Read aloud, saved-login restoration, and persistent logout. See [physical-device results](PHYSICAL-DEVICE.md). Next device work covers PDF/resume behavior and extended permission, interruption, battery, and account/device scenarios.
 
-The morning phone check covers notification permission grant/deny, two-user messaging, actual system-tray taps, background/process-killed delivery, account switching, offline logout, dictation with the real microphone, Read aloud, and resume preview. Battery restrictions and force-stop limitations must also be observed. [Detailed matrix and commands](TESTING.md).
+The remaining phone matrix includes permission denial/re-enable, resume preview, longer speech/interruption scenarios, multiple devices/account switching, and battery/force-stop limitations. Basic positive-path phone checks are complete. [Detailed matrix and commands](TESTING.md).
 
 ## Android session change
 
@@ -28,19 +26,19 @@ Android login/signup now issue ten-day JWTs; browser cookies/JWTs remain one day
 
 The locally generated file is `android/app/build/outputs/apk/debug/app-debug.apk`, inside this frontend repository. Its package is `com.amanxsays.devtinder.debug`, version `1.0-debug`, minimum API 26 and target API 36.
 
-It is debug-signed and currently points at **emulator-only local fixture endpoints** (`10.0.2.2:17777` and `10.0.2.2:18080`). It is not an APK for production users. A USB-connected phone needs a rebuilt bundle with the documented localhost/reverse-port settings and running isolated services. Do not publish this APK or add a website download link yet.
+It is debug-signed and currently points at **USB-only local fixture endpoints** (`127.0.0.1:17777` and `127.0.0.1:18080`). It is not an APK for production users. This phone build needs the documented reverse-port settings and running isolated services. The completed session's services/forwards have been stopped; its disposable login will no longer work. Do not publish this APK or add a website download link yet.
 
 Last inspected APK SHA-256 (changes after rebuilding):
 
 ```text
-3E74671602EF4ED445FB91BC8E5C1E8873000C2EA5633F0FBDD860C5DFB221C5
+461E41B984FE355D628784068DEE67920019983CF452A456E77892691B66F581
 ```
 
 ## Decisions/setup needed before public release
 
 | Item | Your part | Status |
 |---|---|---|
-| Real-device verification | Connect the phone and exercise microphone/system notification behavior | Pending |
+| Real-device verification | Complete the remaining permission/PDF/battery/device matrix | Core positive-path phone tests passed; extended checks pending |
 | Production Firebase | Create a separate production project and register `com.amanxsays.devtinder`; save its client JSON under `android/app/src/release/` | Not configured; development project already works |
 | Release signing | Retain and securely back up the release keystore and passwords outside Git; never paste passwords into chat | No release keystore generated |
 | Existing server rollout | Review coordinated Node/Spring rollout and environment names after phone tests | No deployment activated |

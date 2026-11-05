@@ -71,3 +71,5 @@ Unit tests cover native notification acceptance policy. Instrumentation tests co
 See [release checklist](RELEASE.md) before distribution.
 
 See [notification and physical-device testing](TESTING.md) for isolated test setup, opt-in notification navigation checks, session expiry, and USB forwarding.
+
+Initial real-phone notification, dictation, explicit-send, Read aloud, session-restore and logout checks passed; scope and remaining cases are recorded in [PHYSICAL-DEVICE.md](PHYSICAL-DEVICE.md).
