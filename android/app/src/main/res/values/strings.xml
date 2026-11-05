@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DevTinder</string>
+    <string name="title_activity_main">DevTinder</string>
+    <string name="package_name">com.amanxsays.devtinder</string>
+    <string name="custom_url_scheme">com.amanxsays.devtinder</string>
+</resources>

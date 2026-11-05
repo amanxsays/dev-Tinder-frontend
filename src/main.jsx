@@ -4,6 +4,11 @@ import './index.css'
 import App from './App.jsx'
 import { AI_SERVICE_URL } from './utils/constants'
 import { warmIntegrationService } from './utils/integrationWarmup'
+import { isAndroid } from './platform/platform'
+import './styles/android.css'
+
+// Apply native layout before the first frame, including while session restoration runs.
+if (isAndroid()) document.documentElement.classList.add('dt-android')
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";

@@ -21,3 +21,14 @@ export function messageTime(time) {
   const date = new Date(time);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+// Canonical server IDs reconcile an acknowledgement, room broadcast and history.
+// Legacy messages retain distinct local IDs; equal text is never a deduplication key.
+export function mergeMessages(...groups) {
+  const seen = new Set();
+  return groups.flat().filter(message => {
+    if (seen.has(message.id)) return false;
+    seen.add(message.id);
+    return true;
+  });
+}

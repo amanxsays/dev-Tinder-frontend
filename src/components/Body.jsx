@@ -1,8 +1,11 @@
+import { notificationsOptedIn } from '../platform/nativeNotifications';
+import { session } from '../platform/session';
+import { isAndroid } from '../platform/platform';
 import NavBar from './NavBar'
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Footer from './Footer'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import axios from 'axios'
+import axios from '../platform/apiClient'
 import { BASE_URL } from '../utils/constants'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 import { addUser } from '../utils/userSlice'
@@ -31,9 +34,18 @@ const Body = () => {
     setRemembered(hasSessionHint())
     setRestoring('checking')
     // This also wakes Node, but never blocks displaying the public login form.
-    axios.get(BASE_URL + '/profile/view', {
+    session.load().then(() => {
+      if (disposed || manualAuthRef.current) throw new DOMException('Cancelled', 'AbortError');
+      if (isAndroid() && !session.token()) {
+        setRemembered(false);
+        setRestoring('anonymous');
+        // An unauthenticated profile probe still wakes Node while credentials are entered.
+      }
+      return axios.get(BASE_URL + '/profile/view', {
       withCredentials: true, signal: controller.signal, timeout: 180000,
+      });
     }).then(response => {
+      if (!response) return;
       if (disposed || manualAuthRef.current || store.getState().user?._id) return
       if (!response.data?._id) throw new Error('The session response is not ready.')
       const destination = locationRef.current.pathname === '/login'
@@ -84,7 +96,9 @@ const Body = () => {
     <div className="dt-app-frame">
       <div className="dt-app-backdrop" aria-hidden="true" />
       <NavBar />
-      <main className="dt-app-main">{page}</main>
+      <main className="dt-app-main">
+        {isAndroid() && accountId && !notificationsOptedIn() && location.pathname !== "/settings/notifications" && <aside className="dt-native-notice"><Link to="/settings/notifications">Enable private message and connection-request notifications</Link></aside>}
+        {page}</main>
       <Footer />
     </div>
   )

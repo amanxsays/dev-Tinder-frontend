@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeMessage, messageTime } from '../src/utils/chatMessages.js';
+import { normalizeMessage, messageTime, mergeMessages } from '../src/utils/chatMessages.js';
+
+test('canonical IDs deduplicate history, broadcasts and acknowledgements without merging equal text', () => {
+  const first = { id: 'message-1', text: 'hello' };
+  const second = { id: 'message-2', text: 'hello' };
+  assert.deepEqual(mergeMessages([first], [first, second], [second]), [first, second]);
+});
 
 test('historical IDs identify ownership even when first names are identical', () => {
   const a = normalizeMessage({ _id: 'm1', senderId: { _id: 'other', firstName: 'Aman', photoUrl: 'photo' }, text: 'Hi', createdAt: '2026-01-01T12:00:00Z' }, 'self');

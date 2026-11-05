@@ -1,5 +1,6 @@
+import { authenticatedFetchOptions } from '../platform/apiClient';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AI_CHAT_ENABLED, AI_SERVICE_URL } from '../utils/constants';
+import { AI_CHAT_ENABLED, AI_SERVICE_URL, BASE_URL } from '../utils/constants';
 import { createSseParser } from '../utils/sseParser';
 import { getResumeUrl } from '../utils/resumeSources';
 import { ensureIntegrationReady } from '../utils/integrationWarmup';
@@ -16,7 +17,7 @@ export const useAgenticChat = () => {
   useEffect(() => cancel, [cancel]);
 
   const askAiRecruiter = useCallback(async (query, userId, onComplete) => {
-    if (!AI_CHAT_ENABLED || requestRef.current) return false;
+    if (!AI_CHAT_ENABLED || !userId || requestRef.current) return false;
     const controller = new AbortController();
     requestRef.current = controller;
     const current = () => requestRef.current === controller;
@@ -42,9 +43,10 @@ export const useAgenticChat = () => {
       setAiStatus('Connecting to AI recruiter…');
       // The answer budget starts only after the separate startup wait completes.
       timer = setTimeout(() => { timedOut = true; controller.abort(); }, 130000);
-      const response = await fetch(AI_SERVICE_URL + '/api/chat/stream', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, userId }), signal: controller.signal,
+      const auth = authenticatedFetchOptions();
+      const response = await fetch(BASE_URL + '/ai/chat/stream', {
+        ...auth, method: 'POST', headers: { ...auth.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }), signal: controller.signal,
       });
       if (!response.ok) throw new Error(response.status === 429
         ? 'AI usage is currently limited. Please try again later.'

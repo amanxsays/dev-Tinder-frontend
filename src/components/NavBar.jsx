@@ -1,5 +1,9 @@
+import { isAndroid } from '../platform/platform';
+import { session } from '../platform/session';
+import { disableNotifications } from '../platform/nativeNotifications';
+import UserAvatar from './UserAvatar';
 import { useEffect } from "react";
-import axios from "axios";
+import axios from "../platform/apiClient";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { removeUser } from "../utils/userSlice";
@@ -61,7 +65,10 @@ const NavBar = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
+      if (isAndroid()) {
+        await disableNotifications({ awaitRemote: false });
+        await session.clear();
+      } else await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
       forgetSession();
       dispatch(removeUser());
       dispatch(removeFeed());
@@ -99,12 +106,12 @@ const NavBar = () => {
           </NavLink>
           <div className="dropdown dropdown-end dt-account">
             <button type="button" tabIndex={0} className="btn btn-ghost avatar dt-account-button" aria-label="Open account menu">
-              <img alt="" src={user.photoUrl || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"} />
+              <UserAvatar user={user} />
               <FiChevronDown aria-hidden="true" />
             </button>
             <ul tabIndex={0} className="menu menu-sm dropdown-content dt-account-menu">
               <li><Link to="/profile">Profile</Link></li>
-              <li><a>Settings</a></li>
+              <li><Link to="/settings/notifications">Notifications</Link></li>
               <li><button onClick={handleLogout}>Logout</button></li>
             </ul>
           </div>

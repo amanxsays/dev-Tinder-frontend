@@ -1,0 +1,68 @@
+/* Use Capacitor's injected values when browser env() reports zero. */
+.dt-android {
+  --dt-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --dt-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --dt-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --dt-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  background: #0c1520; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--dt-safe-top) + 90px);
+}
+.dt-android body { margin: 0; overflow-x: clip; }
+.dt-android .dt-site-header.navbar { gap: 12px; padding: calc(var(--dt-safe-top) + 12px) calc(var(--dt-safe-right) + 16px) 12px calc(var(--dt-safe-left) + 16px); min-height: calc(72px + var(--dt-safe-top)); }
+.dt-android .dt-site-brand { min-width: 0; }
+.dt-android .dt-site-brand strong { font-size: 21px; line-height: 1.2; }
+.dt-android .dt-site-brand small { font-size: 8px; letter-spacing: .14em; }
+.dt-android .dt-site-brand img { width: 29px; height: 36px; }
+.dt-android .dt-app-frame { padding-bottom: var(--dt-safe-bottom); }
+.dt-android .dt-app-main { min-width: 0; padding: 24px calc(var(--dt-safe-right) + 16px) 28px calc(var(--dt-safe-left) + 16px); }
+.dt-android .dt-app-main:has(.dt-auth-page) { min-height: 0; padding: 0; }
+.dt-android .dt-auth-page { min-height: calc(100svh - 72px - var(--dt-safe-top) - var(--dt-safe-bottom)); padding: clamp(24px, 7vh, 56px) calc(var(--dt-safe-right) + 16px) 28px calc(var(--dt-safe-left) + 16px); }
+.dt-android .dt-auth-content { padding-top: 0; }
+.dt-android .dt-auth-card { width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 16px 44px #0003; }
+.dt-android .dt-auth-card .card-body { padding: clamp(22px, 6vw, 30px); gap: 22px; }
+.dt-android .dt-auth-intro h1 { font-size: 26px; }
+.dt-android input, .dt-android textarea, .dt-android select { font-size: max(16px, 1em); max-width: 100%; }
+.dt-android input, .dt-android textarea { scroll-margin-block: 100px 140px; }
+.dt-android .dt-session-status { margin: 24px auto; padding: 24px; width: 100%; overflow-wrap: anywhere; }
+.dt-android .dt-session-status > div { gap: 12px; }
+.dt-android .dt-native-notice { margin: 12px 16px 0; padding: 12px 14px; border: 1px solid #8ecfff33; border-radius: 12px; background: #10202d; font-size: 13px; line-height: 1.6; }
+.dt-android .dt-chat-surface, .dt-android .dt-ai-dialog { max-height: 100dvh; }
+.dt-android .dt-chat-header { padding: calc(var(--dt-safe-top) + 12px) calc(var(--dt-safe-right) + 16px) 14px calc(var(--dt-safe-left) + 16px); gap: 12px; }
+.dt-android .dt-chat-title h1 { font-size: 16px; line-height: 1.4; }
+.dt-android .dt-chat-title p { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.dt-android .dt-chat-scroll { padding-inline: calc(var(--dt-safe-left) + 16px) calc(var(--dt-safe-right) + 16px); }
+.dt-android .dt-composer { padding: 0 calc(var(--dt-safe-right) + 12px) calc(var(--dt-safe-bottom) + 12px) calc(var(--dt-safe-left) + 12px); }
+.dt-android .dt-voice-disclosure { line-height: 1.6; font-size: 11px; }
+.dt-android .dt-chat-launcher { right: calc(var(--dt-safe-right) + 18px); bottom: calc(var(--dt-safe-bottom) + 20px); }
+.dt-android .dt-message-content { max-width: 86%; }
+.dt-android .dt-bubble { line-height: 1.65; text-align: start; }
+.dt-android .Toastify__toast-container--top-right { top: calc(var(--dt-safe-top) + 12px); }
+.dt-android .Toastify__toast-container--bottom-right { bottom: calc(var(--dt-safe-bottom) + 12px); }
+.dt-android .dt-profile-page { padding-top: 0; width: 100%; }
+.dt-android .dt-section-title { font-family: inherit; font-size: 24px; font-weight: 600; letter-spacing: -.03em; line-height: 1.4; text-align: start; padding: 0; margin-bottom: 8px; }
+.dt-android .dt-profile-editor { width: 100%; max-width: 720px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.dt-android .dt-profile-form { order: -1; width: 100%; border: 1px solid #c4def21c; border-radius: 18px; background: #111d29; }
+.dt-android .dt-profile-form .card-body { min-width: 0; padding: 24px; }
+.dt-android .dt-profile-form .input, .dt-android .dt-profile-form .select, .dt-android .dt-profile-form .textarea { width: 100%; }
+.dt-android .dt-profile-preview { max-width: 100%; }
+.dt-android .dt-profile-preview .touch-none { touch-action: pan-y; }
+.dt-android .dt-person-row { width: 100%; max-width: 640px; height: auto; min-height: 96px; border: 1px solid #c4def21c; border-radius: 16px; padding: 16px; gap: 14px; overflow: visible; background: #131f2b; }
+.dt-android .dt-person-avatar { width: 56px; height: 56px; min-width: 56px; border-radius: 12px; object-fit: cover; }
+.dt-android .dt-person-body { width: 100%; min-width: 0; margin: 0; padding: 0; gap: 14px; flex-wrap: wrap; }
+.dt-android .dt-person-copy { min-width: 0; flex: 1 1 140px; overflow-wrap: anywhere; }
+.dt-android .dt-person-copy > p:first-child { font-size: 16px; line-height: 1.4; }
+.dt-android .dt-person-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dt-android .dt-person-actions .btn { min-width: 64px; min-height: 44px; }
+.dt-android .dt-request-row .dt-person-actions { flex: 1 1 100%; }
+.dt-android .dt-request-row .dt-person-actions > p { margin: 0; flex: 1; justify-content: flex-start; }
+@media (max-width: 380px) {
+  .dt-android .dt-header-actions { gap: 0; }
+  .dt-android .dt-account { padding-left: 4px; }
+  .dt-android .dt-site-brand strong { font-size: 19px; }
+  .dt-android .dt-auth-name-fields { grid-template-columns: 1fr; }
+}
+@media (max-height: 560px) {
+  .dt-android .dt-auth-page { padding-top: 18px; }
+  .dt-android .dt-chat-header { padding-bottom: 8px; }
+  .dt-android .dt-chat-title p { margin-top: 0; }
+}

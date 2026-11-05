@@ -4,9 +4,15 @@ DevTinder's React application for discovering developers, managing connections, 
 
 This repository is the frontend. The Express API and Spring Boot integration service remain separate repositories.
 
+## Android application
+
+The same frontend now includes a Capacitor Android project in `android/`, with native secure sessions, dictation, Read aloud, private PDF preview, and Firebase notification bridges. Web builds still produce `dist/`; Android bundles produce `dist-android/`. APK updates are separate from Netlify deployments.
+
+See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
+
 ## Features
 
-- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.
+- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. Web JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.
 - **Instant entry:** visitors without a remembered session see login/signup immediately while Node's session check and Spring's startup ping run in the background. Protected screens wait for backend session verification.
 - **Developer discovery:** swipeable candidate cards, connection requests, accepted connections, and GitHub, Codeforces, and LeetCode statistics.
 - **Live name search:** the header search shows matching profile cards directly below the header, with no separate Discover button, introduction, or duplicate field. Results update after a 300 ms debounce; `am` matches Aman, Amanda, and Amit by case-insensitive first/last-name prefix. Searches require two characters, exclude your own profile, and show 20 public profiles per page.
@@ -38,9 +44,9 @@ flowchart LR
     Cloudinary["Cloudinary"]
     Speech["Browser speech APIs"]
 
-    Frontend <-->|"Cookie-authenticated API / human chat"| Backend
-    Frontend <-->|"AI query / SSE statuses and answer"| Integration
-    Backend -->|"Stats proxy / resume ingestion"| Integration
+    Frontend <-->|"Authenticated API / human chat / AI SSE"| Backend
+    Frontend -->|"Public readiness ping"| Integration
+    Backend -->|"Signed AI gateway / stats / resume ingestion"| Integration
     Frontend -->|"Signed resume upload"| Cloudinary
     Frontend -->|"Dictation / optional Read aloud"| Speech
 ```
@@ -52,7 +58,8 @@ The integration service owns AI orchestration and its Gemini, Redis, MongoDB, an
 | Traffic | Development | Production |
 | --- | --- | --- |
 | HTTP API | Vite `/api` proxy to `VITE_API_URL` | Direct to `VITE_API_URL` |
-| AI SSE | Vite `/integration-api` proxy to `VITE_STATS_SERVICE_URL` | Direct to `VITE_STATS_SERVICE_URL` |
+| AI SSE | Vite `/api/ai/chat/stream` proxy to Node | Node `/ai/chat/stream` at `VITE_API_URL` |
+| Spring readiness | Vite `/integration-api/api/ping` proxy | `VITE_STATS_SERVICE_URL` + `/api/ping` |
 | Human WebSockets | Direct to `VITE_API_URL` | Direct to `VITE_API_URL` |
 | Developer statistics | Backend `/stats` endpoint | Backend `/stats` endpoint |
 
@@ -126,7 +133,9 @@ Manual sign-in cancels the earlier background session check so a late response c
 
 ### Text and drafts
 
-Human chat uses the existing authenticated `GET /chat/:targetUserId` history endpoint and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. AI chat posts `{ query, userId }` to `/api/chat/stream` and consumes its existing SSE events.
+Human chat uses authenticated `GET /chat/:targetUserId` history and Socket.IO `joinChat`, `sendMessage`, and `messageReceived` events. The server derives sender identity from the session, requires an accepted connection, and acknowledges persistence before the composer clears its draft. Canonical message IDs deduplicate history, broadcasts, and acknowledgements; they do not imply recipient delivery or read status.
+
+AI chat posts `{ query }` to Node's authenticated `/ai/chat/stream`, which derives the user ID, signs its upstream request to Spring, and relays the existing SSE events. Node and Spring require the same server-only `AI_GATEWAY_SECRET`; deploy the coordinated gateway changes before this frontend. Never put that secret in a `VITE_*` variable.
 
 - Enter sends; Shift+Enter inserts a newline.
 - Drafts are separate for each conversation and stay in memory.

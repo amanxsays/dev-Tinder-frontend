@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+import axios from '../platform/apiClient';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';

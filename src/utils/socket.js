@@ -1,9 +1,12 @@
+import { isAndroid } from '../platform/platform';
+import { session } from '../platform/session';
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "./constants";
 
 export const createSocketConnection = () => {
   return io(SOCKET_URL, {
-    withCredentials: true,
+    withCredentials: !isAndroid(),
+    auth: isAndroid() ? { token: session.token() } : {},
     transports: ["websocket"],
   });
 };

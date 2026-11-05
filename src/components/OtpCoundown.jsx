@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function CountdownTimer({ startTime , onResend}) {
   const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes in second
@@ -32,10 +32,8 @@ function CountdownTimer({ startTime , onResend}) {
   }
 
   return (
-      <p className="flex gap-1">
-        <span className="text-[15px] mt-[-2px] font-semibold text-green-500">
-          Otp will expire in <div className={`text-[15px] mt-[-2px] font-semibold ${minutes>=1 ? 'text-green-500' : 'text-red-500'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</div>
-        </span>
+      <p className="flex flex-wrap items-center gap-1 text-sm text-slate-400" role="timer" aria-live="off">
+          Code expires in <span className={`font-semibold tabular-nums ${minutes>=1 ? 'text-green-400' : 'text-red-400'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</span>
       </p>
   );
 }

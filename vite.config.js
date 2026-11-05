@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), 'VITE_')
   return {
     plugins: [react(), tailwindcss()],
+    build: { outDir: mode === 'android' ? 'dist-android' : 'dist' },
     server: {
       proxy: {
         '/integration-api': {
