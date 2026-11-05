@@ -41,10 +41,10 @@ The Windows npm build commands use `gradlew.bat`. On Linux/macOS use `npm run bu
 
 ## Feature boundaries
 
-- Browser cookies stay unchanged. Android uses a one-day bearer token encrypted using an Android Keystore-backed AES-GCM key. No refresh token or persistent password is stored.
+- Browser cookies remain one day. Android uses a ten-day bearer token encrypted using an Android Keystore-backed AES-GCM key. No refresh token or persistent password is stored. Existing one-day tokens keep their original expiry; sign in again after updating the backend and Android build to obtain a ten-day token.
 - Browser speech remains browser-based. Android uses native `SpeechRecognizer` and `TextToSpeech`, preserves editable review and explicit Send, and stops capture/playback on backgrounding.
 - PDFs remain in-app on Android using `PdfRenderer`; bounded temporary files are app-private, removed when closed, and abandoned files are cleared on the next launch. Citation validation still occurs before opening.
-- Notification subscriptions are independent of JWT expiry. Generic alerts can continue after one day, but tapping one requires authentication. Explicit logout/account switching disables the old binding locally, including offline.
+- Notification subscriptions are independent of JWT expiry. Generic alerts can continue after the ten-day login expires, but tapping one requires authentication. Explicit logout/account switching disables the old binding locally, including offline.
 - Offline revocations remain in encrypted native storage and retry on app startup, foregrounding, connectivity restoration, or a later registration. Cleanup is fenced to the old binding generation so it cannot disable a newer account.
 - Killed processes do not retain React drafts or AI transcripts. Human message history is persisted on the server and reloaded. No background AI job completion guarantee is introduced.
 - No voice calls, recorded audio messages, background microphone service, Firebase Authentication, Firestore migration, or persistent background Socket.IO connection is included.

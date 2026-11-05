@@ -12,7 +12,7 @@ release actions. No service credentials belong in frontend configuration.
 - App name `DevTinder`, application ID `com.amanxsays.devtinder`, existing blue logo.
 - Bundle assets locally; never load the production website as the app shell.
 - Preserve browser HTTP-only cookies; use Android bearer JWTs encrypted by a
-  Keystore-backed key. JWT lifetime remains one day, without refresh tokens.
+  Keystore-backed key. Android JWT lifetime is ten days following the approved duration change; browser sessions remain one day, without refresh tokens.
 - Generic FCM alerts for persisted human messages and incoming interested requests.
 - Generic alerts continue after session expiry, but tapping requires authentication.
 - One account binding per installation, multiple installations per user. Explicit

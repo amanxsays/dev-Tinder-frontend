@@ -6,7 +6,7 @@
 - Real FCM notifications reached the API 36 emulator through authenticated native registration, actual Socket.IO message persistence, a local MongoDB replica set, and the durable outbox.
 - Message and connection-request notification PendingIntents opened their correct protected screens after process restart. Expired native sessions opened Login.
 - Foreground chat delivery, native logout cancellation, stale-binding rejection, and durable logout cleanup after a confirmed cold restart were checked. The offline case blocked API requests and verified the failure before logging out.
-- Frontend: 68 tests and production web build pass. Backend: 34 tests pass. Spring: 67 isolated tests pass; the production-connected application-context test remains excluded. Android: six JVM policy tests and four secure-state instrumentation tests pass; three opt-in navigation scenarios passed separately. Android lint passed in the preceding verification run.
+- Frontend: 68 tests and production web build pass. Backend: 35 tests pass. Spring: 67 isolated tests pass; the production-connected application-context test remains excluded. Android: six JVM policy tests and five secure-state instrumentation tests pass; three opt-in navigation scenarios passed separately. Android lint passed in the preceding verification run.
 - Release checks now require an absolute keystore path, matching Gradle. An actual negative Gradle run rejected a relative path; a subsequent normal JVM test run passed.
 - `npm run android:inspect` verifies the existing APK signature, compiled package/SDK settings, checksum, and targeted credential patterns in web assets without installing or uploading it.
 
@@ -20,6 +20,10 @@ All implementation changes remain on `feature/android-fcm`. Existing Netlify/Ren
 
 The morning phone check covers notification permission grant/deny, two-user messaging, actual system-tray taps, background/process-killed delivery, account switching, offline logout, dictation with the real microphone, Read aloud, and resume preview. Battery restrictions and force-stop limitations must also be observed. [Detailed matrix and commands](TESTING.md).
 
+## Android session change
+
+Android login/signup now issue ten-day JWTs; browser cookies/JWTs remain one day. API expiry metadata matches the token exactly. Existing one-day Android tokens keep their original expiry. The updated native build and backend must be rolled out together before signing in for the longer session.
+
 ## Current APK
 
 The locally generated file is `android/app/build/outputs/apk/debug/app-debug.apk`, inside this frontend repository. Its package is `com.amanxsays.devtinder.debug`, version `1.0-debug`, minimum API 26 and target API 36.
@@ -29,7 +33,7 @@ It is debug-signed and currently points at **emulator-only local fixture endpoin
 Last inspected APK SHA-256 (changes after rebuilding):
 
 ```text
-BBC57BEBF247BCFF7CF8D7F6C4059AF39ABD1D5EBEC84E53CDBC828450640D8B
+3E74671602EF4ED445FB91BC8E5C1E8873000C2EA5633F0FBDD860C5DFB221C5
 ```
 
 ## Decisions/setup needed before public release

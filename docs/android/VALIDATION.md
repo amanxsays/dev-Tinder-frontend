@@ -3,15 +3,15 @@
 ## Verified locally
 
 - Frontend: 68 Node tests pass; focused ESLint passes; normal Vite website build passes.
-- Backend: 34 Node tests pass. Existing dependency audit findings remain; unused
+- Backend: 35 Node tests pass. Existing dependency audit findings remain; unused
   optional Firebase Firestore/Storage dependencies are excluded by backend `.npmrc`.
 - Spring: 67 isolated unit/controller tests pass with JDK 25. The production-connected
   `IntegrationServiceApplicationTests` context test was deliberately excluded.
 - Android: `:app:testDebugUnitTest`, `:app:assembleDebug`, `:app:lintDebug`, and
   `:app:assembleDebugAndroidTest` pass with JDK 21, SDK 36, and the Gradle wrapper.
-- Six native notification-policy JVM tests pass. All four secure-state instrumentation
+- Six native notification-policy JVM tests pass. All five secure-state instrumentation
   tests ran and passed on an Android 16/API 36 emulator: encrypted session storage,
-  notification revocation/binding cleanup, duplicate-event state, and one-time tap consumption/stale-binding rejection.
+  notification revocation/binding cleanup, duplicate-event state, one-time tap consumption/stale-binding rejection, and ten-day session save/restore with excessive/expired-session rejection.
 - Actual Android WebView checks passed against local HTTP fixtures: bundled launch,
   native mobile login, secure session save, reload restoration, authenticated AI
   incremental SSE, local logout clearing session/binding, mobile width, and no
@@ -60,6 +60,10 @@ and dependency-version recommendations; no lint errors are suppressed as a basel
 - Frontend Node tests: 68 passing, including six setup-preflight tests. Backend Node tests: 34 passing, including three validation-only Firebase setup tests.
 
 ## Repeatable local commands
+
+### Ten-day Android session update
+
+Android JWT issuance and maximum age are now 864,000 seconds for both HTTP bearer requests and Socket.IO. Browser issuance, cookies and maximum age remain 86,400 seconds. Mobile login/signup expiry metadata is derived from the actual issued JWT; previous one-day tokens retain their original expiry. The updated native save limit accepts ten days with the existing small clock allowance; server expiry remains exact. Backend tests cover day-two access, the ten-day age boundary, old one-day token expiry, strict native claims, and exact response expiry. All 35 backend tests, 68 frontend tests, six JVM policy tests, and five emulator secure-state instrumentation tests pass; debug APK and test APK builds and artifact inspection pass. No production deployment occurred.
 
 The follow-up regression run passed all 68 frontend tests, 34 backend tests, and 67 isolated Spring tests, plus the normal web build and focused setup-script lint. Gradle rejected a relative release keystore path with the intended message and then passed its normal JVM task with the invalid test setting removed. The Windows APK inspector passed on the debug artifact (package `.debug`, minimum API 26, target API 36); its signature and eight bundled text assets were checked. The asset scan is targeted rather than an exhaustive secret audit. Current artifact details and remaining owner checks are in [MORNING-CHECKLIST.md](MORNING-CHECKLIST.md).
 

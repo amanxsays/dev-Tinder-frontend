@@ -39,7 +39,7 @@ No second Firebase messaging service or `@capacitor/push-notifications` plugin i
 2. Exchange messages between two accounts in the foreground and background.
 3. Kill the app process without force-stopping; verify delivery and cold-start navigation.
 4. Switch accounts and log out offline while a push is in flight; no old-account alert may reappear.
-5. Expire the one-day JWT; generic alerts may continue but protected content requires login.
+5. Expire the ten-day Android JWT; generic alerts may continue but protected content requires login. Browser JWTs remain one day.
 6. Refresh tokens, revoke a device, reinstall, and register multiple devices.
 7. Verify invalid tokens are removed without deleting a newer registration.
 

@@ -12,7 +12,7 @@ See [Android development](docs/android/README.md), [Firebase configuration](docs
 
 ## Features
 
-- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.
+- **Accounts:** cookie-based login, signup with email OTP verification, profile editing, and logout. Web JWTs and login/signup cookies last one day; the backend also rejects older tokens after 24 hours.
 - **Instant entry:** visitors without a remembered session see login/signup immediately while Node's session check and Spring's startup ping run in the background. Protected screens wait for backend session verification.
 - **Developer discovery:** swipeable candidate cards, connection requests, accepted connections, and GitHub, Codeforces, and LeetCode statistics.
 - **Live name search:** the header search shows matching profile cards directly below the header, with no separate Discover button, introduction, or duplicate field. Results update after a 300 ms debounce; `am` matches Aman, Amanda, and Amit by case-insensitive first/last-name prefix. Searches require two characters, exclude your own profile, and show 20 public profiles per page.

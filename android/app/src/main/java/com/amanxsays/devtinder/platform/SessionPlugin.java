@@ -9,13 +9,14 @@ import java.time.Instant;
 
 @CapacitorPlugin(name = "DevTinderSession")
 public class SessionPlugin extends Plugin {
+    private static final long MAX_SESSION_SECONDS = 10L * 24 * 60 * 60;
     @PluginMethod public void read(PluginCall call) {
         try {
             SessionStore store = new SessionStore(getContext());
             String saved = store.read("session");
             if (saved == null) { call.resolve(new JSObject()); return; }
             JSObject session = new JSObject(saved);
-            if (Instant.parse(session.getString("expiresAt")).isBefore(Instant.now())) {
+            if (!Instant.parse(session.getString("expiresAt")).isAfter(Instant.now())) {
                 store.remove("session"); call.resolve(new JSObject()); return;
             }
             call.resolve(session);
@@ -29,7 +30,7 @@ public class SessionPlugin extends Plugin {
         try {
             Instant expiresAt = Instant.parse(expiry);
             if (token.trim().isEmpty() || token.length() > 8192 || !userId.matches("[a-fA-F0-9]{24}")
-                || !expiresAt.isAfter(Instant.now()) || expiresAt.isAfter(Instant.now().plusSeconds(86500))) {
+                || !expiresAt.isAfter(Instant.now()) || expiresAt.isAfter(Instant.now().plusSeconds(MAX_SESSION_SECONDS + 100))) {
                 call.reject("Invalid native session", "INVALID_SESSION"); return;
             }
             JSObject session = new JSObject();

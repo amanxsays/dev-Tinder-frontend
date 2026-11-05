@@ -3,7 +3,7 @@
 ## Release gates
 
 - Web tests/build and Android unit/instrumentation tests pass.
-- Complete login/signup/OTP, one-day session, search, profile, connections, two-user messaging, AI SSE, resume lifecycle, dictation and Read aloud smoke tests.
+- Complete login/signup/OTP, ten-day Android sessions (one-day browser sessions), search, profile, connections, two-user messaging, AI SSE, resume lifecycle, dictation and Read aloud smoke tests.
 - Test Android API 26, 33 and 36 with current WebView, plus at least one real Google Play-enabled phone.
 - Verify the authenticated Node AI gateway is deployed before requiring signed-only Spring chat. Do not distribute the APK against a backend missing mobile authentication routes.
 - Test notification privacy, account switching, offline logout, expired login, token rotation, duplicate dispatch, killed-process delivery, and force-stop limitations.

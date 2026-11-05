@@ -7,7 +7,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.amanxsays.devtinder.platform.NotificationStore;
 import com.amanxsays.devtinder.platform.NotificationsPlugin;
 import com.amanxsays.devtinder.platform.SessionStore;
+import com.amanxsays.devtinder.platform.SessionPlugin;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PluginCall;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.time.Instant;
@@ -15,6 +17,39 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class SecureStateTest {
+    private static final class CapturedCall extends PluginCall {
+        boolean resolved;
+        String rejected;
+        JSObject result;
+        CapturedCall(JSObject data) { super(null, "DevTinderSession", "fixture", "fixture", data); }
+        @Override public void resolve() { resolved = true; }
+        @Override public void resolve(JSObject value) { resolved = true; result = value; }
+        @Override public void reject(String message, String code, Exception error, JSObject data) { rejected = code; }
+    }
+
+    @Test public void nativeSessionAcceptsTenDaysRejectsExcessAndClearsExpiredSession() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SessionStore secure = new SessionStore(context);
+        SessionPlugin plugin = new SessionPlugin() { @Override public Context getContext() { return context; } };
+        JSObject data = new JSObject();
+        data.put("token", "native-duration-fixture"); data.put("userId", "111111111111111111111111");
+        String expiry = Instant.now().plusSeconds(10L * 86400).toString();
+        data.put("expiresAt", expiry);
+        try {
+            CapturedCall save = new CapturedCall(data); plugin.save(save);
+            assertTrue(save.resolved); assertNull(save.rejected);
+            CapturedCall read = new CapturedCall(new JSObject()); plugin.read(read);
+            assertEquals(expiry, read.result.getString("expiresAt"));
+            for (long duration : new long[] {11L * 86400, -60}) {
+                data.put("expiresAt", Instant.now().plusSeconds(duration).toString());
+                CapturedCall invalid = new CapturedCall(data); plugin.save(invalid);
+                assertFalse(invalid.resolved); assertEquals("INVALID_SESSION", invalid.rejected);
+            }
+            secure.write("session", data.toString());
+            CapturedCall expired = new CapturedCall(new JSObject()); plugin.read(expired);
+            assertEquals(0, expired.result.length()); assertNull(secure.read("session"));
+        } finally { secure.remove("session"); }
+    }
     @Test public void sessionCiphertextDoesNotContainTokenAndClearPreservesInstallation() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         SessionStore secure = new SessionStore(context); NotificationStore push = new NotificationStore(context);
