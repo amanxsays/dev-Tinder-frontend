@@ -34,7 +34,7 @@ const getCfColor = (rank) => {
   return "text-white";
 };
 
-const UserCard = ({ user }) => {
+const UserCard = ({ user, onAction }) => {
   const {
     _id,
     firstName,
@@ -95,6 +95,7 @@ const UserCard = ({ user }) => {
       );
       toast.success(res.data);
       dispatch(removeCard(targetId));
+      onAction?.();
       if (isProfilePage) navigate("/");
     } catch (error) {
       console.error(error);

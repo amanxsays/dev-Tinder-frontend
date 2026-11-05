@@ -1,0 +1,14 @@
+.dt-feed-stack { display: flex; flex-direction: column; align-items: center; gap: 18px; min-height: 80vh; }
+.dt-swipe-hint { position: relative; width: 288px; max-width: 100%; padding: 16px 40px 12px 18px; border: 1px solid #83b7dc33; border-radius: 16px; background: linear-gradient(135deg, #192c3b, #142330); box-shadow: 0 8px 24px #0002; animation: dt-swipe-reveal .35s ease-out both; }
+.dt-swipe-directions { display: flex; justify-content: space-between; gap: 16px; color: #b7cde0; font-size: 12px; font-weight: 600; }
+.dt-swipe-directions span { display: inline-flex; align-items: center; gap: 6px; }
+.dt-swipe-directions span:last-child { color: #91d9be; }
+.dt-swipe-hint p { font-size: 10px; color: #91a9bd; margin-top: 10px; }
+.dt-swipe-hint > button { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 44px; height: 44px; color: #92aabd; border-radius: 12px; cursor: pointer; }
+.dt-swipe-hint > button:focus-visible { outline: 2px solid #8ccfff; outline-offset: -4px; }
+.dt-swipe-track { position: relative; height: 2px; margin-top: 12px; background: #b0d5ed17; border-radius: 999px; }
+.dt-swipe-track > span { position: absolute; top: -2px; left: calc(50% - 3px); width: 6px; height: 6px; border-radius: 50%; background: #9acff1; animation: dt-swipe-demo 2.4s ease-in-out 2; }
+@keyframes dt-swipe-demo { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-54px); } 70% { transform: translateX(54px); } }
+@keyframes dt-swipe-reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 768px) { .dt-swipe-hint { width: 320px; } }
+@media (prefers-reduced-motion: reduce) { .dt-swipe-hint, .dt-swipe-track > span { animation: none; } }

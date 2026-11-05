@@ -2,7 +2,7 @@ import { isAndroid } from '../platform/platform';
 import { session } from '../platform/session';
 import { disableNotifications } from '../platform/nativeNotifications';
 import UserAvatar from './UserAvatar';
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "../platform/apiClient";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { BASE_URL } from "../utils/constants";
@@ -22,10 +22,27 @@ const NavBar = () => {
   const requests = useSelector(state => state.request);
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
+  const [accountMenu, setAccountMenu] = useState(null);
+  const accountRef = useRef(null);
+  const accountButton = useRef(null);
+  const menuKey = accountId => `${accountId || ''}:${pathname}:${search}`;
+  const accountMenuOpen = accountMenu === menuKey(user?._id);
+  const profilePage = pathname === '/profile' || pathname.startsWith('/profile/');
   const searchQuery = pathname === '/discover' ? new URLSearchParams(search).get('q') || '' : '';
   const searchDevelopers = query => navigate('/discover' + (query ? '?q=' + encodeURIComponent(query) : ''), { replace: pathname === '/discover' });
   const accountId = user?._id;
   const pendingCount = Array.isArray(requests) ? requests.length : 0;
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const outside = event => { if (!accountRef.current?.contains(event.target)) setAccountMenu(null); };
+    const escape = event => {
+      if (event.key === 'Escape') { setAccountMenu(null); accountButton.current?.focus(); }
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+  }, [accountMenuOpen]);
 
   useEffect(() => {
     if (!accountId) return;
@@ -95,10 +112,10 @@ const NavBar = () => {
         <FiDownload aria-hidden="true" /><span>Get Android app</span>
       </Link>}
       {accountId && <>
-        <form className="dt-header-search" role="search" onSubmit={event => { event.preventDefault(); searchDevelopers(searchQuery); }}>
+        {!profilePage && <form className="dt-header-search" role="search" onSubmit={event => { event.preventDefault(); searchDevelopers(searchQuery); }}>
           <FiSearch aria-hidden="true" />
           <input type="search" placeholder="Search developers" aria-label="Search developers" maxLength={80} value={searchQuery} onChange={event => searchDevelopers(event.target.value)} />
-        </form>
+        </form>}
         <nav className="dt-header-actions" aria-label="Main navigation">
           <NavLink to="/requests" className="dt-header-icon dt-requests-link" aria-label={requestLabel} title={requestLabel}>
             <FiBell aria-hidden="true" />
@@ -107,17 +124,17 @@ const NavBar = () => {
           <NavLink to="/connections" className="dt-header-icon" aria-label="Connections" title="Connections">
             <FiUsers aria-hidden="true" />
           </NavLink>
-          <div className="dropdown dropdown-end dt-account">
-            <button type="button" tabIndex={0} className="btn btn-ghost avatar dt-account-button" aria-label="Open account menu">
+          <div className="dt-account" ref={accountRef}>
+            <button ref={accountButton} type="button" className="btn btn-ghost avatar dt-account-button" aria-label="Open account menu" aria-expanded={accountMenuOpen} aria-controls={accountMenuOpen ? 'dt-account-menu' : undefined} onClick={() => setAccountMenu(accountMenuOpen ? null : menuKey(user?._id))}>
               <UserAvatar user={user} />
               <FiChevronDown aria-hidden="true" />
             </button>
-            <ul tabIndex={0} className="menu menu-sm dropdown-content dt-account-menu">
+            {accountMenuOpen && <ul id="dt-account-menu" className="menu menu-sm dt-account-menu" onClick={() => setAccountMenu(null)}>
               <li><Link to="/profile">Profile</Link></li>
               <li><Link to="/settings/notifications">Notifications</Link></li>
               {!isAndroid() && <li><Link to="/download">Get Android app</Link></li>}
               <li><button onClick={handleLogout}>Logout</button></li>
-            </ul>
+            </ul>}
           </div>
         </nav>
       </>}
