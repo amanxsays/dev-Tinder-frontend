@@ -1,9 +1,10 @@
-/* Use Capacitor's injected values when browser env() reports zero. */
+/* MainActivity reserves system bars/cutouts and keyboard outside the WebView.
+   Do not add CSS safe-area insets a second time or depend on scroll-sensitive env(). */
 .dt-android {
-  --dt-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
-  --dt-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
-  --dt-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
-  --dt-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --dt-safe-top: 0px;
+  --dt-safe-bottom: 0px;
+  --dt-safe-left: 0px;
+  --dt-safe-right: 0px;
   background: #0c1520; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   scroll-padding-top: calc(var(--dt-safe-top) + 90px);
 }

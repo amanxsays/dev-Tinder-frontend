@@ -14,6 +14,23 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NotificationsPlugin.class);
         registerPlugin(PdfPlugin.class);
         super.onCreate(state);
+        // Keep the entire WebView below system bars, independent of document
+        // scrolling and WebView's version-dependent CSS safe-area reporting.
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        android.view.View content = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(content, (view, insets) -> {
+            androidx.core.graphics.Insets barsInsets = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                    | androidx.core.view.WindowInsetsCompat.Type.displayCutout());
+            androidx.core.graphics.Insets keyboard = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+            view.setPadding(barsInsets.left, barsInsets.top, barsInsets.right, Math.max(barsInsets.bottom, keyboard.bottom));
+            return new androidx.core.view.WindowInsetsCompat.Builder(insets)
+                .setInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                    | androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+                    | androidx.core.view.WindowInsetsCompat.Type.ime(), androidx.core.graphics.Insets.NONE)
+                .build();
+        });
+        androidx.core.view.ViewCompat.requestApplyInsets(content);
         int background = android.graphics.Color.rgb(12, 21, 32);
         getWindow().getDecorView().setBackgroundColor(background);
         getWindow().setStatusBarColor(background);

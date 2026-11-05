@@ -10,6 +10,8 @@ import { getApiErrorMessage } from "../utils/apiErrors";
 import { isAndroid } from '../platform/platform';
 import { openNativePdf } from '../platform/nativePdf';
 import { session } from '../platform/session';
+import { resumeUploadError } from '../utils/resumeUploadError';
+import '../styles/resume.css';
 
 const MAX_SIZE_MB = 5;
 
@@ -52,7 +54,7 @@ const ResumeSection = ({ user }) => {
     try {
       // 1. Ask our backend for a signed payload (no network call to Cloudinary happens here)
       const { data: sig } = await axios.get(BASE_URL + "/profile/resume/upload-signature", {
-        withCredentials: true,
+        withCredentials: true, timeout: 30000,
       });
 
       // 2. Upload the file straight from the browser to Cloudinary
@@ -67,7 +69,7 @@ const ResumeSection = ({ user }) => {
 
       const cloudRes = await uploadClient.post(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/raw/upload`,
-        cloudForm
+        cloudForm, { timeout: 90000 }
       );
 
       // Save first; the backend retires the old file and search data after success.
@@ -79,7 +81,7 @@ const ResumeSection = ({ user }) => {
           resumeFileName: file.name,
           resumePublicId: cloudRes.data.public_id,
         },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 30000 }
       );
       dispatch(addUser(res.data.data));
       window.dispatchEvent(new CustomEvent("devtinder:resume-changed", { detail: { candidateId: user._id } }));
@@ -88,7 +90,7 @@ const ResumeSection = ({ user }) => {
       const fallback = uploadStage === "save"
         ? "Your PDF uploaded, but saving it failed. Refresh the page and try again."
         : "Could not upload your resume. Check your connection and try again.";
-      toast.error(getApiErrorMessage(err, fallback));
+      toast.error(resumeUploadError(err, fallback));
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -107,10 +109,10 @@ const ResumeSection = ({ user }) => {
   };
 
   return (
-    <fieldset className="fieldset">
+    <fieldset className="fieldset dt-resume-field">
       <p>Resume</p>
-      <div className="bg-[#1a1a1a] rounded-md border border-gray-800 p-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="dt-resume-card">
+        <div className="dt-resume-file">
           <FaFilePdf className="text-red-500 shrink-0" size={20} />
           {resumeFileName ? (
             <a
@@ -118,7 +120,7 @@ const ResumeSection = ({ user }) => {
               onClick={openResume}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-gray-300 truncate hover:text-blue-400 hover:underline"
+              className="dt-resume-filename text-gray-300 hover:text-blue-400 hover:underline"
               title={resumeFileName}
             >
               {resumeFileName}
@@ -127,6 +129,7 @@ const ResumeSection = ({ user }) => {
             <span className="text-xs text-gray-500 italic">No resume uploaded</span>
           )}
         </div>
+        <div className="dt-resume-actions">
         {resumeFileName && <button type="button" onClick={removeResume} disabled={isUploading}
           className="btn btn-xs btn-ghost text-red-400 shrink-0">Remove</button>}
         <button
@@ -144,6 +147,7 @@ const ResumeSection = ({ user }) => {
             </>
           )}
         </button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
