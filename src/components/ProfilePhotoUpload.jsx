@@ -4,6 +4,7 @@ import { FiCamera } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import uploadClient from 'axios';
 import api from '../platform/apiClient';
+import { writeDeviceCache } from '../platform/deviceCache';
 import { BASE_URL } from '../utils/constants';
 import { addUser } from '../utils/userSlice';
 export default function ProfilePhotoUpload({ photoUrl, onUploaded, onBusy }) {
@@ -31,7 +32,7 @@ export default function ProfilePhotoUpload({ photoUrl, onUploaded, onBusy }) {
       const response = await api.patch(BASE_URL + '/profile/photo', { publicId: result.data.public_id, version: result.data.version,
         signature: result.data.signature, format: result.data.format }, { timeout: 30000, signal: controller.current.signal });
       if (!active.current || owner !== store.getState().user?._id) return;
-      onUploaded(response.data.data.photoUrl); dispatch(addUser(response.data.data)); toast.success('Profile photo updated.');
+      onUploaded(response.data.data.photoUrl); dispatch(addUser(response.data.data)); void writeDeviceCache(owner, 'profile', response.data.data); toast.success('Profile photo updated.');
     } catch { if (!active.current || owner !== store.getState().user?._id) return; toast.error('Could not upload your photo. Your previous photo is unchanged.'); }
     finally { setBusy(false); if (active.current) onBusy?.(false); if (input.current) input.current.value = ''; }
   };
