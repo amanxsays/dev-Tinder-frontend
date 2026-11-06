@@ -1,41 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-function CountdownTimer({ startTime , onResend}) {
-  const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes in second
+export default function CountdownTimer({ startTime, onResend, disabled = false }) {
+  const [now, setNow] = useState(Date.now);
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsedSeconds = Math.floor((now - startTime) / 1000);
-      const remaining = 2 * 60 - elapsedSeconds;
-      setTimeLeft(remaining > 0 ? remaining : 0);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [startTime]);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-
-  if (timeLeft <= 0) {
-    return (
-      <div className="flex gap-1 text-[13px] mt-1 text-gray-400">
-        Didn't receive the code? 
-        <button 
-          type="button" // VERY IMPORTANT: Prevents the form from submitting
-          onClick={onResend} 
-          className="text-blue-500 font-bold hover:underline cursor-pointer"
-        >
-          Resend OTP
-        </button>
-      </div>
-    );
-  }
-
-  return (
-      <p className="flex flex-wrap items-center gap-1 text-sm text-slate-400" role="timer" aria-live="off">
-          Code expires in <span className={`font-semibold tabular-nums ${minutes>=1 ? 'text-green-400' : 'text-red-400'}`}>{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</span>
-      </p>
-  );
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const elapsed = Math.max(0, Math.floor((now - startTime) / 1000));
+  const remaining = Math.max(0, 300 - elapsed);
+  const resend = Math.max(0, 120 - elapsed);
+  return <div className="dt-otp-help">
+    <p role="timer" aria-live="off">{remaining ? `Code expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}` : 'Code expired. Request a new one.'}</p>
+    {resend ? <p>Resend available in {resend}s</p> : <button type="button" disabled={disabled} onClick={onResend} className="dt-text-button">Resend code</button>}
+  </div>;
 }
-
-export default CountdownTimer;
