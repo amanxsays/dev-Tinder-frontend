@@ -1,0 +1,12 @@
+.dt-update-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; color: #e9f2fa; background: radial-gradient(ellipse at top, #15314a, #0b141e 65%); }
+.dt-update-card { width: min(100%, 400px); text-align: center; padding: 30px 22px; border: 1px solid #a6cbe824; border-radius: 24px; background: #111e2bf2; box-shadow: 0 16px 60px #0003; }
+.dt-update-symbol { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: #163e5d; color: #83d4ff; font-size: 30px; }
+.dt-update-brand { margin-top: 18px; color: #8db1cd; font-weight: 600; }
+.dt-update-card h1 { margin: 10px 0 12px; font-size: 27px; font-weight: 650; letter-spacing: -.03em; }
+.dt-update-card > p { line-height: 1.6; font-size: 14px; }
+.dt-update-primary, .dt-update-retry { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: 600; }
+.dt-update-primary { margin-top: 24px; background: #4ac78c; color: #08271c; }
+.dt-update-primary:disabled { opacity: .65; cursor: wait; }
+.dt-update-retry { margin-top: 14px; color: #a9d9fa; background: #9bcaf40b; }
+.dt-update-card .dt-update-help { font-size: 12px; color: #a0b3c4; margin-top: 14px; }
+.dt-update-card button:focus-visible { outline: 2px solid #9de4ff; outline-offset: 4px; }

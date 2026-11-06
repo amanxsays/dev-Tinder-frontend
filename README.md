@@ -237,3 +237,5 @@ Vite embeds the environment values and AI flag at build time. A changed value re
 - [Implementation plan and subsequent UI decisions](docs/chat-voice-ui/implementation-plan.md)
 
 The implementation plan's follow-up sections record the later approvals: side-panel presentation, fixed glass globe, current-task ripples, signed-in-only AI access, and the refreshed app header/background.
+
+Android 1.0.4 prepares a required-update gate backed by a static Netlify version manifest; see [required updates](docs/android/REQUIRED-UPDATES.md). Publication requires a newly signed APK; the download remains 1.0.3 until verified.
