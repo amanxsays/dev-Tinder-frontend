@@ -23,7 +23,7 @@ For every future release:
 4. Run tests/build. Publish the web update only after the new APK is available and verified. Do not raise the manifest version before the APK is ready; this would lock out users without an installable update.
 5. Verify the live manifest/asset before requesting users to update. Historical release assets remain intact.
 
-Current rollout: code 5 / 1.0.4 is prepared but not signed or published yet. Public metadata remains verified 1.0.3/code 4. The first distributed APK with this feature must be installed manually once. A website update cannot inject this feature into old bundled APKs.
+Current rollout: signed production code 5 / 1.0.4 is published on GitHub Releases. Download metadata and the static manifest are updated to verified 1.0.4/code 5 in the same Netlify web build. The first distributed APK with this feature must be installed manually once. A website update cannot inject this feature into old bundled APKs.
 
 Rollback: revert the manifest metadata and publish only an existing verified APK; clients with a newer code remain allowed. Android will not normally downgrade an installed app. For an application fix, publish a higher versionCode signed with the same key. Do not revoke signing keys or delete installed user data.
 
