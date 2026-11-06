@@ -238,6 +238,6 @@ Vite embeds the environment values and AI flag at build time. A changed value re
 
 The implementation plan's follow-up sections record the later approvals: side-panel presentation, fixed glass globe, current-task ripples, signed-in-only AI access, and the refreshed app header/background.
 
-Android 1.0.4 includes a required-update gate backed by a static Netlify version manifest; see [required updates](docs/android/REQUIRED-UPDATES.md). The signed 1.0.4 download and code-5 version manifest are published together.
+Android 1.0.4 includes a required-update gate backed by a static Netlify version manifest; see [required updates](docs/android/REQUIRED-UPDATES.md). The current signed 1.0.5 download and code-6 version manifest are published together.
 
-Android 1.0.5 prepares SRi branding, compact startup loaders, Cloudinary photo selection, device-protected saved-account sign-in, encrypted bounded chat caches and incremental refresh. [Changes, offline limits and phone checks](docs/android/1.0.5-SRI.md). The public APK remains the previously verified release until the new signed APK is published.
+Android 1.0.5 includes SRi branding, compact startup loaders, Cloudinary photo selection, device-protected saved-account sign-in, encrypted bounded chat caches and incremental refresh. [Changes, offline limits and phone checks](docs/android/1.0.5-SRI.md). The signed APK and matching update manifest are served together by Netlify; real-device checks remain listed in that guide.
