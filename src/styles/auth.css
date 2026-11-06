@@ -94,3 +94,8 @@
 .dt-auth-remember label { display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 14px; cursor: pointer; }
 .dt-auth-remember input { width: 18px; height: 18px; accent-color: #4aa8e3; }
 .dt-auth-inline-error { color: #ffb8ac; font-size: 13px; line-height: 1.5; }
+
+.dt-saved-account { border: 1px solid #73b9e635; background: #12304a55; border-radius: 14px; padding: 12px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.dt-saved-account button { min-height: 44px; cursor: pointer; border-radius: 10px; font-size: 13px; }
+.dt-saved-account button:first-child { background: #256487; color: #e8f8ff; font-weight: 600; }
+.dt-saved-account button:nth-child(2), .dt-saved-account p { color: #a4b9ca; font-size: 11px; text-align: center; }

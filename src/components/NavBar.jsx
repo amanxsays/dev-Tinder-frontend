@@ -49,7 +49,7 @@ const NavBar = () => {
     let disposed = false;
     let controller = null;
     const refresh = async () => {
-      if (disposed || document.hidden || controller) return;
+      if (disposed || document.hidden || controller || !navigator.onLine) return;
       controller = new AbortController();
       // A review can change the list while this request is in flight.
       const previousRequests = store.getState().request;

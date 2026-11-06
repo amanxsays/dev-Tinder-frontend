@@ -5,3 +5,5 @@ export const NativeSession = registerPlugin('DevTinderSession');
 export const NativeSpeech = registerPlugin('DevTinderSpeech');
 export const NativeNotifications = registerPlugin('DevTinderNotifications');
 export const NativePdf = registerPlugin('DevTinderPdf');
+
+export const NativeDeviceData = registerPlugin('DevTinderDeviceData');

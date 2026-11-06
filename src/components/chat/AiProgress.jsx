@@ -17,7 +17,7 @@ export default function AiProgress({ status, steps, partial }) {
   const history = steps.at(-1) === currentStatus ? steps : [...steps, currentStatus];
   return <section className="dt-ai-progress" aria-label="AI progress">
     <header className="dt-progress-heading">
-      <div><p className="dt-progress-eyebrow">DEVI</p><h3>{progressStage(currentStatus)}</h3></div>
+      <div><p className="dt-progress-eyebrow">SRi</p><h3>{progressStage(currentStatus)}</h3></div>
     </header>
     <p className="sr-only" role="status">{currentStatus}</p>
     <ol className="dt-progress-timeline" aria-label="Request status updates">

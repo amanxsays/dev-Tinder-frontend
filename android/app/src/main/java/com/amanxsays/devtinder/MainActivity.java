@@ -10,6 +10,7 @@ import com.amanxsays.devtinder.platform.PdfPlugin;
 public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle state) {
         registerPlugin(SessionPlugin.class);
+        registerPlugin(com.amanxsays.devtinder.platform.DeviceDataPlugin.class);
         registerPlugin(SpeechPlugin.class);
         registerPlugin(NotificationsPlugin.class);
         registerPlugin(PdfPlugin.class);

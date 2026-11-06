@@ -25,7 +25,9 @@ function Application() {
     useEffect(() => {
         // Public downloads never mount this component. Warm-up is deduplicated
         // by the service, including StrictMode and returning from /download.
-        void warmIntegrationService(AI_SERVICE_URL);
+        const warm = () => { if (navigator.onLine) void warmIntegrationService(AI_SERVICE_URL); };
+        warm(); window.addEventListener('online', warm);
+        return () => window.removeEventListener('online', warm);
     }, []);
     return (
                     <ChatExperienceProvider>

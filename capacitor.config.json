@@ -3,7 +3,7 @@
   "appName": "DevTinder",
   "webDir": "dist-android",
   "server": { "hostname": "localhost", "androidScheme": "https", "cleartext": false },
-  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false },
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false, "loggingBehavior": "none" },
   "plugins": {
     "SystemBars": { "insetsHandling": "disable", "style": "DARK" },
     "CapacitorHttp": { "enabled": false },

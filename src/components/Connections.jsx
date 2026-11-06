@@ -1,3 +1,4 @@
+import { readDeviceCache, writeDeviceCache } from '../platform/deviceCache';
 import axios from '../platform/apiClient';
 import { useEffect, useState } from 'react';
 import { BASE_URL } from '../utils/constants';
@@ -15,12 +16,15 @@ export default function Connections() {
     if (!accountId) return;
     let disposed = false;
     const controller = new AbortController();
+    void readDeviceCache(accountId, 'connections').then(rows => { if (!disposed && Array.isArray(rows)) dispatch(addConnections(rows)); });
+    if (!navigator.onLine) return () => { disposed = true; controller.abort(); };
     void axios.get(BASE_URL + '/user/connections', {
       withCredentials: true, signal: controller.signal, timeout: 15000,
     }).then(response => {
       if (disposed) return;
       if (!Array.isArray(response.data)) throw new Error('Invalid connections response');
       dispatch(addConnections(response.data));
+      void writeDeviceCache(accountId, 'connections', response.data);
       setError('');
     }).catch(failure => {
       if (!disposed && !axios.isCancel(failure)) setError('Could not load your connections. Check your connection and try again.');

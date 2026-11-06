@@ -143,6 +143,7 @@ function AiExperience({ children }) {
   }, [isAiThinking, aiStatus]);
 
   const send = async text => {
+    if (!navigator.onLine) { toast.info('SRi needs an internet connection. Your draft is still here.'); return; }
     if (!AI_CHAT_ENABLED || !user?._id || !text.trim() || sendGuard.current || isAiThinking) return;
     sendGuard.current = true;
     runtime.release(aiOwner);
@@ -178,8 +179,8 @@ function AiExperience({ children }) {
   return <>
     {children}
     {!pathname.startsWith('/chat/') && !aiOpen && <button type="button" className="dt-chat-launcher" onClick={openAi}
-      title="Open Devi" aria-label="Open Devi" aria-haspopup="dialog"><ChatOrb size="launcher" /></button>}
-    <dialog ref={dialog} className={'dt-ai-dialog' + (selectedResume ? ' dt-ai-dialog--preview' : '')} aria-label="Devi"
+      title="Open SRi" aria-label="Open SRi" aria-haspopup="dialog"><ChatOrb size="launcher" /></button>}
+    <dialog ref={dialog} className={'dt-ai-dialog' + (selectedResume ? ' dt-ai-dialog--preview' : '')} aria-label="SRi"
       onClick={event => {
         const bounds = event.currentTarget.getBoundingClientRect();
         if (event.target === event.currentTarget && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dismiss();
@@ -187,9 +188,9 @@ function AiExperience({ children }) {
       onCancel={event => { event.preventDefault(); if (selectedResume) closePreview(); else dismiss(); }}>
       <div className={'dt-ai-layout' + (selectedResume ? ' dt-ai-layout--preview' : '')}>
         {selectedResume && <ResumePreview key={selectedResume.documentId + ':' + selectedResume.fileUrl} source={selectedResume} onClose={closePreview} />}
-        <ChatShell modal title="Devi" subtitle={isAiThinking ? 'Working on your request' : 'DevTinder · Candidate intelligence'}
+        <ChatShell modal title="SRi" subtitle={isAiThinking ? 'Working on your request' : 'DevTinder · Candidate intelligence'}
           identity={<ChatOrb active={isAiThinking} />} onBack={dismiss}
-          composer={<ChatComposer owner={aiOwner} onSend={send} disabled={isAiThinking} placeholder={isAiThinking ? 'Devi is working…' : 'Ask about a candidate…'} />}>
+          composer={<ChatComposer owner={aiOwner} onSend={send} disabled={isAiThinking} placeholder={isAiThinking ? 'SRi is working…' : 'Ask about a candidate…'} />}>
           <div ref={scrollRef} onScroll={onScroll} className="dt-chat-scroll">
             {!messages.length && <div className="dt-chat-welcome">
               <ChatOrb size="large" /><h2>How can I help you today?</h2><p>{WELCOME}</p>
@@ -198,7 +199,7 @@ function AiExperience({ children }) {
             {messages.map(message => <article className={'dt-message-row' + (message.sender === 'user' ? ' dt-message-row--own' : '')} key={message.id}>
               {message.sender === 'ai' && <ChatOrb />}
               <div className="dt-message-content">
-                <div className="dt-message-meta"><span>{message.sender === 'user' ? 'You' : 'Devi'}</span><time dateTime={message.time.toISOString()}>{messageTime(message.time)}</time></div>
+                <div className="dt-message-meta"><span>{message.sender === 'user' ? 'You' : 'SRi'}</span><time dateTime={message.time.toISOString()}>{messageTime(message.time)}</time></div>
                 <div className={'dt-bubble' + (message.sender === 'user' ? ' dt-bubble--own' : '')}>
                   {message.sender === 'user' ? message.text : <ChatMarkdown text={message.text} sources={message.sources} onOpenResume={openResume} />}
                   {!!message.sources?.length && <div className="dt-source-list" aria-label="Resumes used">
