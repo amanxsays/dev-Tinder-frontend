@@ -6,7 +6,19 @@ The download route has its own static layout outside the application lifecycle. 
 
 Share `https://devtinderfront.netlify.app/download` directly with phone or desktop users. They do not need an account to view the page or download the APK. An account is required only when signing into the installed app.
 
-## Current release: 1.0.3
+## Current release: 1.0.4
+
+- Package: `com.amanxsays.devtinder`; version name `1.0.4`, version code `5`.
+- Source: `4cae594d256d06b80909da8af7da65b6d71c0d32`.
+- Release tag: `android-v1.0.4`; asset `DevTinder-1.0.4.apk`, 5,691,117 bytes.
+- SHA-256: `f6f82f1265233e26ca6fe8f97fc7e936bc66c861f46496ce2528278cb0ead72b`.
+- Signing certificate unchanged: `aab1071e2f3d8c0e454946bdd598d99d91e3b669f892e9000a6f0ccd3e113ed0`.
+- Primary: `https://devtinderfront.netlify.app/downloads/DevTinder-1.0.4.apk`.
+- Manifest: `https://devtinderfront.netlify.app/android-version.json`; required current code `5`.
+
+Includes the [required-update gate](REQUIRED-UPDATES.md). The owner-built signed production APK was checked for package, version, certificate, update UI and production endpoints. The web mirror independently verifies the public release hash before generating the manifest. Install this first update manually over the existing app without uninstalling. Actual phone installer/upgrade checks remain; this feature is not present in older APKs and is not a silent installer.
+
+## Previous release: 1.0.3
 
 - Package: `com.amanxsays.devtinder`; version name `1.0.3`, version code `4`.
 - Source: `23bd9da3df10687b740b0cd0670d4a19a6e59ac5`.

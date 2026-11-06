@@ -1,10 +1,10 @@
 export const androidRelease = Object.freeze({
   applicationId: 'com.amanxsays.devtinder',
-  versionCode: 4,
-  versionName: '1.0.3',
-  filename: 'DevTinder-1.0.3.apk',
-  bytes: 5689409,
-  sha256: 'b4129b1e390e2eec190498d6343d14372d5726248b68bffc873ad5dbb8a53a24',
-  sourceUrl: 'https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.3/DevTinder-1.0.3.apk',
-  downloadPath: '/downloads/DevTinder-1.0.3.apk',
+  versionCode: 5,
+  versionName: '1.0.4',
+  filename: 'DevTinder-1.0.4.apk',
+  bytes: 5691117,
+  sha256: 'f6f82f1265233e26ca6fe8f97fc7e936bc66c861f46496ce2528278cb0ead72b',
+  sourceUrl: 'https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.4/DevTinder-1.0.4.apk',
+  downloadPath: '/downloads/DevTinder-1.0.4.apk',
 });
