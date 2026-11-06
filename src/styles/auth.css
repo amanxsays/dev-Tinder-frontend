@@ -86,3 +86,11 @@
   .dt-auth-backdrop::before { background-size: 48px 48px; opacity: .6; }
   .dt-auth-contours { opacity: .6; }
 }
+
+.dt-auth-modes { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; gap: 4px; border-radius: 12px; background: #080f18; border: 1px solid #ffffff12; }
+.dt-auth-modes button { min-height: 44px; border-radius: 9px; cursor: pointer; color: #a9bbcc; font-weight: 600; }
+.dt-auth-modes button[aria-pressed="true"] { background: #214767; color: #fff; box-shadow: 0 2px 6px #0003; }
+.dt-auth-mode-hint, .dt-auth-remember p { color: #a7bbce; font-size: 12px; line-height: 1.5; }
+.dt-auth-remember label { display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 14px; cursor: pointer; }
+.dt-auth-remember input { width: 18px; height: 18px; accent-color: #4aa8e3; }
+.dt-auth-inline-error { color: #ffb8ac; font-size: 13px; line-height: 1.5; }

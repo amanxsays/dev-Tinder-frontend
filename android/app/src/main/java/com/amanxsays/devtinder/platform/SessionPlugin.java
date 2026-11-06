@@ -36,6 +36,14 @@ public class SessionPlugin extends Plugin {
             JSObject session = new JSObject();
             session.put("token", token); session.put("userId", userId); session.put("expiresAt", expiry);
             new SessionStore(getContext()).write("session", session.toString());
+            getActivity().runOnUiThread(() -> {
+                // Successful authentication ends the autofill session. The selected
+                // password manager decides whether to offer saving credentials.
+                try {
+                    android.view.autofill.AutofillManager manager = getActivity().getSystemService(android.view.autofill.AutofillManager.class);
+                    if (manager != null && manager.isEnabled()) manager.commit();
+                } catch (Exception ignored) { /* Autofill is optional. */ }
+            });
             call.resolve();
         } catch (Exception error) { call.reject("Could not store the session securely.", "SESSION_SAVE_FAILED"); }
     }

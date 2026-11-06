@@ -64,7 +64,7 @@ export default function AndroidLifecycle() {
     }));
     const expired = () => {
       if (!state.current.accountId) return;
-      // Keep the independently opted-in generic notification binding after JWT expiry.
+      // Keep the independently opted-in notification binding after JWT expiry.
       state.current.runtime.interrupt();
       void closeNativePdf().catch(() => {});
       void session.clear().catch(() => {});

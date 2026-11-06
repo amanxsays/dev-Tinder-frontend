@@ -43,9 +43,18 @@ public class DevTinderMessagingService extends FirebaseMessagingService {
                 .putExtra(NotificationsPlugin.TAP_EXTRA, payload.toString());
             PendingIntent tap = PendingIntent.getActivity(this, data.get("eventId").hashCode(), open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            String sender = data.getOrDefault("senderName", "").trim();
+            String preview = data.getOrDefault("messagePreview", "").trim();
+            if (sender.length() > 80) sender = sender.substring(0, 80);
+            if (preview.length() > 240) preview = preview.substring(0, 240);
+            String summary = chat ? "New message" : "New connection request";
+            android.app.Notification publicVersion = new NotificationCompat.Builder(this, chat ? "messages" : "connection_requests")
+                .setSmallIcon(R.drawable.ic_stat_devtinder).setContentTitle("DevTinder").setContentText(summary).build();
             NotificationCompat.Builder notification = new NotificationCompat.Builder(this, chat ? "messages" : "connection_requests")
-                .setSmallIcon(R.drawable.ic_stat_devtinder).setContentTitle("DevTinder")
-                .setContentText(chat ? "New message" : "New connection request")
+                .setSmallIcon(R.drawable.ic_stat_devtinder).setContentTitle(chat && !sender.isEmpty() ? sender : "DevTinder")
+                .setContentText(chat && !preview.isEmpty() ? preview : summary)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(chat && !preview.isEmpty() ? preview : summary))
+                .setPublicVersion(publicVersion)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setAutoCancel(true)
                 .setPriority(chat ? NotificationCompat.PRIORITY_HIGH : NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(tap).setCategory(chat ? NotificationCompat.CATEGORY_MESSAGE : NotificationCompat.CATEGORY_SOCIAL);

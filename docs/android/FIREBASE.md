@@ -27,7 +27,7 @@ The client registers a high-entropy installation capability and FCM token agains
 
 Android 13+ requests notification permission only after the user chooses Enable. Denial does not disable chat. Microphone permission is independent and requested only when starting dictation.
 
-Stable FCM high-priority data messages are handled by the native `DevTinderMessagingService`, including when React is not alive. The service posts generic notification text after checking the current binding, subscription expiry, event expiry, and duplicate event ID. It must never display a sender name, message text, JWT, or resume details.
+Stable FCM high-priority data messages are handled by the native `DevTinderMessagingService`, including when React is not alive. The service checks the current binding, subscription expiry, event expiry, and duplicate event ID before displaying anything. Starting in 1.0.3, successfully persisted human messages include a bounded authenticated sender name and message preview, as requested. Generic content is used for the locked-screen public version and older payloads; Android settings ultimately control lock-screen visibility. Never include JWTs, credentials, or resume details. Previews pass through FCM and the one-day notification outbox; this is not end-to-end encrypted messaging.
 
 There are separate Messages and Connection requests channels. Users can control them in Android settings. Opening the active conversation suppresses the corresponding push alert; Socket.IO still delivers chat content. Taps carry structured internal IDs, not arbitrary navigation URLs.
 

@@ -147,7 +147,7 @@ function HumanChat({ targetUserId }) {
     });
   };
   const partnerName = partner ? [partner.firstName, partner.lastName].filter(Boolean).join(' ') : 'Conversation';
-  return <div className="dt-chat-surface">
+  return <div className="dt-chat-surface dt-human-chat">
     <ChatShell title={partnerName} subtitle="DevTinder · Direct message"
       identity={<Avatar url={partner?.photoUrl} name={partnerName} />} onBack={() => navigate('/connections')}
       composer={<ChatComposer owner={owner} onSend={send} disabled={loading || !userId || sending || uncertain} placeholder={sending ? 'Saving message…' : 'Write a message…'} />}>
@@ -161,13 +161,12 @@ function HumanChat({ targetUserId }) {
           // Historical IDs are reliable. Legacy live events only provide display names.
           const own = message.own ?? message.firstName === user?.firstName;
           return <article key={message.id} className={'dt-message-row' + (own ? ' dt-message-row--own' : '')}>
-            {!own && <Avatar url={message.photoUrl} name={message.firstName} />}
             <div className="dt-message-content">
-              <div className="dt-message-meta"><span>{own ? 'You' : message.firstName}</span>
-                {message.time && <time dateTime={message.time.toISOString()}>{messageTime(message.time)}</time>}</div>
-              <div className={'dt-bubble' + (own ? ' dt-bubble--own' : '')} style={{ whiteSpace: 'pre-wrap' }}>{message.text}</div>
+              <div className={'dt-bubble' + (own ? ' dt-bubble--own' : '')}>
+                <span className="dt-message-text">{message.text}</span>
+                {message.time && <time className="dt-bubble-time" dateTime={message.time.toISOString()}>{messageTime(message.time)}</time>}
+              </div>
             </div>
-            {own && <Avatar url={message.photoUrl} name={message.firstName} />}
           </article>;
         })}
       </div>
