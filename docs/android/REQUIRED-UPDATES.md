@@ -6,7 +6,7 @@ The release Android bundle wraps the entire React app in AndroidUpdateGate. Befo
 
 The update gate stays blocked after download/cancellation/return, until a valid version check confirms that the installed build is current. Native Back minimizes the app while blocked. Rechecks run on foreground, online/visibility events, Check again, and every five minutes while visible. This is UI gating, not a tamper-proof backend access control or an instantaneous server-side revocation mechanism. A new version may take until the next check to be noticed.
 
-Per the requested strict policy, failed, timed-out or malformed checks block use with Connect to continue and Retry. There is no offline bypass or cached grace period. Existing required-version information is retained after a failed recheck. Current builds continue normally when checks succeed; a newer installed build is also allowed. Debug/development Android builds explicitly bypass the release gate. Web browsing and /download do not run native update checks.
+In 1.0.4, failed checks strictly block with Retry. Starting with 1.0.5, the requested cached offline mode allows an unexpired session to use saved data when the version was verified within the last 24 hours; a known required newer release still always blocks. Online failures remain blocked; uncached/expired offline decisions require reconnecting. See 1.0.5-SRI.md. Existing required-version information is retained after a failed recheck. Current builds continue normally when checks succeed; a newer installed build is also allowed. Debug/development Android builds explicitly bypass the release gate. Web browsing and /download do not run native update checks.
 
 ## Static manifest and publication
 

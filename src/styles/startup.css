@@ -1,0 +1,13 @@
+.dt-startup { width: min(400px, calc(100% - 32px)); margin: clamp(40px, 12vh, 120px) auto; text-align: center; padding: 34px 22px; color: #e6f0f9; }
+.dt-startup h1 { font-size: 20px; font-weight: 600; margin: 20px 0 8px; }
+.dt-startup > p { font-size: 12px; color: #9cacc0; line-height: 1.6; max-width: 280px; margin: auto; }
+.dt-startup-mark { display: grid; place-items: center; height: 66px; color: #9ddcff; font-size: 32px; }
+.dt-startup-spinner { display: block; width: 50px; height: 50px; border: 3px solid #99d7ff20; border-top-color: #6ccaff; border-right-color: #6ccaff88; border-radius: 50%; animation: dt-startup-spin .85s linear infinite; }
+.dt-startup-actions { display: grid; gap: 12px; margin: 26px auto 0; max-width: 260px; }
+.dt-startup-actions button { min-height: 46px; border-radius: 12px; background: #1c354a; color: #c6e8ff; cursor: pointer; font-size: 14px; }
+.dt-startup-actions .dt-sign-in-alternative { background: #42bd86; color: #062b1d; font-weight: 650; }
+.dt-startup-actions button:focus-visible { outline: 2px solid #a6dfff; outline-offset: 3px; }
+@keyframes dt-startup-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .dt-startup-spinner { animation: none; border-top-color: #9ddcff; } }
+
+.dt-offline-banner { text-align: center; padding: 8px 16px; background: #203b50; color: #c6e2f6; font-size: 12px; }

@@ -1,7 +1,8 @@
-import { isAndroid } from '../platform/platform';
+import { isAndroid, NativeDeviceData } from '../platform/platform';
+import { writeDeviceCache } from '../platform/deviceCache';
 import { acceptNativeSession } from '../platform/session';
 import { getNotificationState, disableNotifications } from '../platform/nativeNotifications';
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "../platform/apiClient";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
@@ -18,6 +19,14 @@ const savedEmail = () => { try { return localStorage.getItem('devtinder.remember
 const Login = () => {
   const [rememberEmail, setRememberEmail] = useState(() => Boolean(savedEmail()));
   const [authError, setAuthError] = useState('');
+  const [saveAccount, setSaveAccount] = useState(false);
+  const [savedAccount, setSavedAccount] = useState('');
+  useEffect(() => {
+    if (!isAndroid()) return;
+    let alive = true;
+    void NativeDeviceData.savedAccount().then(value => { if (alive) setSavedAccount(value.email || ''); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const chooseMode = signup => { setIsSignUpPage(signup); setAuthError(''); setOtpInput(false); setStartTime(null); };
   const [showPass, setShowPass] = useState(false);
   const [isSignUpPage, setIsSignUpPage] = useState(false);
@@ -51,6 +60,11 @@ const Login = () => {
       if (previous.userId && previous.userId !== data.data?._id) await disableNotifications({ awaitRemote: false });
     }
     await acceptNativeSession(data);
+    void writeDeviceCache(data.data._id, 'profile', data.data);
+    if (isAndroid() && saveAccount) {
+      try { await NativeDeviceData.saveCredentials({ email: emailId.current.value.trim(), password: password.current.value }); }
+      catch (error) { toast.info(error.message || 'Could not save this account. Sign-in still succeeded.'); }
+    }
     try {
       if (rememberEmail) localStorage.setItem('devtinder.remembered-email', emailId.current.value.trim());
       else localStorage.removeItem('devtinder.remembered-email');
@@ -82,6 +96,22 @@ const Login = () => {
     } catch (err) {
       showAuthError(err);
     } finally { finishAction(); }
+  };
+  const useSavedAccount = async () => {
+    if (actionPending.current) return;
+    actionPending.current = true; setPendingAction('Unlocking saved account');
+    try {
+      const credentials = await NativeDeviceData.unlockCredentials();
+      setShowPass(false); password.current.type = 'password';
+      emailId.current.value = credentials.email; password.current.value = credentials.password;
+      actionPending.current = false; setPendingAction(null);
+      await handleLogin();
+    } catch { setAuthError('Unlock cancelled or unavailable. You can sign in below.'); }
+    finally { actionPending.current = false; setPendingAction(null); }
+  };
+  const forgetSavedAccount = async () => {
+    try { await NativeDeviceData.forgetCredentials(); setSavedAccount(''); }
+    catch { setAuthError('Could not remove saved account. Please try again.'); }
   };
   const handleSignUp= async () => {
     if (!beginAction('Creating your account')) return;
@@ -165,6 +195,11 @@ const Login = () => {
             </div>
             <p className="dt-auth-mode-hint">{isSignUpPage ? 'Already have an account? Choose Log in.' : 'First time here? Choose Create account.'}</p>
             {authError && <p className="dt-auth-inline-error" role="alert">{authError}</p>}
+            {!isSignUpPage && isAndroid() && savedAccount && <div className="dt-saved-account">
+              <button type="button" disabled={Boolean(pendingAction)} onClick={useSavedAccount}>Continue as {savedAccount}</button>
+              <button type="button" disabled={Boolean(pendingAction)} onClick={forgetSavedAccount}>Remove saved account</button>
+              <p>Confirm your phone screen lock to sign in.</p>
+            </div>}
             <div className="dt-auth-name-fields" hidden={!isSignUpPage}>
               <div className="dt-auth-field">
                 <label htmlFor="dt-first-name"><FiUser aria-hidden="true" />First name</label>
@@ -201,13 +236,14 @@ const Login = () => {
                 setRememberEmail(event.target.checked);
                 if (!event.target.checked) { try { localStorage.removeItem('devtinder.remembered-email'); } catch { /* Optional preference. */ } }
               }} /> Remember my email</label>
-              <p>Your password manager can save and autofill your password. DevTinder never saves it on this device.</p>
+              <p>{isAndroid() ? 'Use your password manager or save this account securely below.' : 'Your password manager can save and autofill your password. DevTinder does not store it in browser storage.'}</p>
             </div>}
+            {isAndroid() && <div className="dt-auth-remember"><label><input type="checkbox" checked={saveAccount} onChange={event => setSaveAccount(event.target.checked)} />Save this account on my phone</label><p>Encrypted on this device. Screen lock is required to use it.</p></div>}
             <div className="dt-auth-actions">
               <button type="submit" disabled={Boolean(pendingAction)} className="btn dt-auth-submit">
                 {pendingAction ? pendingAction + '…' : isSignUpPage ? (otpInput ? 'Verify & Sign Up' : 'Send Otp') : 'Login'}
               </button>
-              {pendingAction && <p className="dt-auth-wait" role="status">The server may take a moment to wake up. Please keep this page open.</p>}
+              {pendingAction && <p className="dt-auth-wait" role="status">Signing you in securely. Please keep this page open.</p>}
               <button type="button" disabled={Boolean(pendingAction)} className="dt-auth-switch" onClick={() => chooseMode(!isSignUpPage)}>
                 {isSignUpPage ? <>Already registered? <span>Log in</span></> : <>New to DevTinder? <span>Sign up</span></>}
               </button>

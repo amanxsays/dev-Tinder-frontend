@@ -312,3 +312,5 @@
 .chat-orb--launcher { animation: dt-orb-levitate 5s ease-in-out infinite; will-change: transform; }
 @keyframes dt-orb-levitate { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 @media (prefers-reduced-motion: reduce) { .chat-orb--launcher { animation: none; will-change: auto; } }
+
+.dt-chat-cache-note { font-size: 11px; color: #a9bed0; text-align: center; padding: 8px; }

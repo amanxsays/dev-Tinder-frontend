@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { App } from '@capacitor/app';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { FiDownload, FiRefreshCw, FiShield } from 'react-icons/fi';
+import StartupLoader from './StartupLoader';
 import { isAndroid } from '../platform/platform';
 import { checkAndroidUpdate } from '../utils/androidUpdate';
 import '../styles/android-update.css';
-
 const enabled = () => isAndroid() && import.meta.env.VITE_ANDROID_ENV !== 'development';
-
 export default function AndroidUpdateGate({ children }) {
   const [state, setState] = useState({ status: 'checking' });
   const [retry, setRetry] = useState(0);
@@ -51,6 +50,7 @@ export default function AndroidUpdateGate({ children }) {
   useEffect(() => { if (enabled() && state.status !== 'current') heading.current?.focus(); }, [state.status]);
   if (!enabled() || state.status === 'current') return children;
   const required = state.status === 'required';
+  if (state.status === 'checking') return <main className="dt-update-page"><StartupLoader message="Checking for updates..." /></main>;
   const download = async () => {
     setOpening(true); setDownloadError('');
     try {
@@ -63,10 +63,10 @@ export default function AndroidUpdateGate({ children }) {
     <section className="dt-update-card">
       <div className="dt-update-symbol" aria-hidden="true"><FiShield /></div>
       <p className="dt-update-brand">DevTinder</p>
-      <h1 id="dt-update-heading" tabIndex={-1} ref={heading}>{required ? 'Update to continue' : state.status === 'checking' ? 'Checking your app' : 'Connect to continue'}</h1>
+      <h1 id="dt-update-heading" tabIndex={-1} ref={heading} className="dt-update-heading">{required ? 'Update to continue' : state.status === 'checking' ? 'Checking your app' : 'Connect to continue'}</h1>
       <p role="status">{required ? `Version ${state.release.versionName} is ready. Install the latest update to keep using DevTinder.`
-        : state.status === 'checking' ? 'Checking for the latest version?' : 'We could not check for updates. Connect to the internet and retry.'}</p>
-      {required && <><button type="button" className="dt-update-primary" disabled={opening} onClick={download}><FiDownload />{opening ? 'Opening download?' : 'Update now'}</button>
+        : state.status === 'checking' ? 'Checking for the latest version...' : 'We could not check for updates. Connect to the internet and retry.'}</p>
+      {required && <><button type="button" className="dt-update-primary" disabled={opening} onClick={download}><FiDownload />{opening ? 'Opening download...' : 'Update now'}</button>
         <p className="dt-update-help">Open the downloaded APK and approve the update. Your account and app data stay on this phone.</p></>}
       {state.status !== 'checking' && <button type="button" className="dt-update-retry" onClick={() => { if (!required) setState({ status: 'checking' }); setRetry(value => value + 1); }}><FiRefreshCw />Check again</button>}
       {downloadError && <p role="alert">{downloadError}</p>}

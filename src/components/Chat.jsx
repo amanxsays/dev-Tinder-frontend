@@ -1,3 +1,5 @@
+import { isAndroid } from '../platform/platform';
+import { readDeviceCache, writeDeviceCache } from '../platform/deviceCache';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,6 +9,7 @@ import { BASE_URL } from '../utils/constants';
 import { normalizeMessage, messageTime, mergeMessages } from '../utils/chatMessages';
 import { useChatExperience } from '../contexts/ChatExperienceContext';
 import { useChatScroll } from '../hooks/useChatScroll';
+import StartupLoader from './StartupLoader';
 import ChatShell from './chat/ChatShell';
 import ChatComposer from './chat/ChatComposer';
 
@@ -36,6 +39,12 @@ function HumanChat({ targetUserId }) {
   const [attempt, setAttempt] = useState(0);
   const [sending, setSending] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const historyCursor = useRef(null);
+  const [savedView, setSavedView] = useState(false);
+  const [hasEarlier, setHasEarlier] = useState(false);
+  const [olderPending, setOlderPending] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const sendPending = useRef(false);
   const { scrollRef, onScroll, showLatest, jumpToLatest } = useChatScroll(messages.length + ':' + loading);
   const userId = user?._id;
@@ -44,18 +53,20 @@ function HumanChat({ targetUserId }) {
     const known = connections?.find(person => person._id === targetUserId);
     if (known) { setPartner(known); return; }
     let disposed = false;
+    void readDeviceCache(user?._id, 'chat:' + targetUserId).then(value => { if (!disposed && value?.partner) setPartner(value.partner); });
     const controller = new AbortController();
+    if (isAndroid() && !navigator.onLine) return () => { disposed = true; controller.abort(); };
     axios.get(BASE_URL + '/profile/view/' + targetUserId, { withCredentials: true, signal: controller.signal, timeout: 15000 })
       .then(response => { if (!disposed) setPartner(response.data); })
       .catch(() => { /* History still identifies participants where available. */ });
     return () => { disposed = true; controller.abort(); };
-  }, [targetUserId, connections]);
+  }, [targetUserId, connections, user?._id]);
 
   useEffect(() => {
     if (!userId) return;
     let disposed = false;
     const controller = new AbortController();
-    const socket = createSocketConnection();
+    const socket = createSocketConnection({ autoConnect: !isAndroid() || navigator.onLine });
     socketRef.current = socket;
     setLoading(true);
     setError('');
@@ -71,6 +82,7 @@ function HumanChat({ targetUserId }) {
           setError(result?.error || 'Could not join this conversation. Reconnect to try again.');
         } else {
           setConnection('Connected');
+          void loadHistory();
           setError(previous => previous.startsWith('Chat connection interrupted.') ? '' : previous);
         }
       });
@@ -89,27 +101,50 @@ function HumanChat({ targetUserId }) {
     socket.on('disconnect', disconnected);
     socket.on('connect_error', disconnected);
     socket.on('messageReceived', received);
-    if (socket.connected) joined();
     let historyPending = false;
-    const loadHistory = () => {
+    const loadHistory = async () => {
       if (historyPending || disposed) return;
       historyPending = true;
-      void axios.get(BASE_URL + '/chat/' + targetUserId, {
-        withCredentials: true, signal: controller.signal, timeout: 15000,
-      }).then(response => {
-        if (disposed) return;
-        const history = (Array.isArray(response.data?.messages) ? response.data.messages : []).map(message => normalizeMessage(message, userId));
-        setMessages(previous => mergeMessages(history, previous));
-        setUncertain(false);
-      }).catch(() => {
-        if (!disposed) setError('Could not load chat history. Retry explicitly; your draft is preserved.');
-      }).finally(() => { historyPending = false; if (!disposed) setLoading(false); });
+      try {
+        if (isAndroid()) {
+          const cached = await readDeviceCache(userId, 'chat:' + targetUserId);
+          if (disposed) return;
+          if (cached?.messages?.length) {
+            historyCursor.current ||= cached.cursor || null;
+            const restored = cached.messages.map(message => normalizeMessage(message, userId));
+            setMessages(previous => mergeMessages(restored, previous));
+            setLoading(false); setSavedView(true); setHasEarlier(Boolean(cached.hasEarlier || cached.messages.length >= 300));
+          }
+          if (!navigator.onLine) { setLoading(false); return; }
+          if (!socket.connected) socket.connect();
+        }
+        for (let batch = 0; batch < 5; batch++) {
+          const cachedCursorWasSet = Boolean(historyCursor.current);
+          const response = await axios.get(BASE_URL + '/chat/' + targetUserId, {
+            withCredentials: true, signal: controller.signal, timeout: 20000,
+            params: isAndroid() ? { sync: '1', ...(historyCursor.current ? { after: historyCursor.current } : {}) } : undefined,
+          });
+          if (disposed) return;
+          const history = (Array.isArray(response.data?.messages) ? response.data.messages : []).map(message => normalizeMessage(message, userId));
+          if (isAndroid()) historyCursor.current = response.data.cursor || historyCursor.current;
+          setMessages(previous => (response.data.reset ? history : mergeMessages(previous, history)).sort((a, b) => (a.time?.getTime() || 0) - (b.time?.getTime() || 0)));
+          if (!historyCursor.current || response.data.reset || !cachedCursorWasSet) setHasEarlier(Boolean(response.data.hasEarlier));
+          setSavedView(false); setUncertain(false); setError('');
+          if (!isAndroid() || !response.data.hasMore) break;
+          if (batch === 4) setError('More messages are available. Reconnect and reload to continue syncing.');
+        }
+      } catch {
+        if (!disposed) setError('Could not refresh messages. Saved messages and your draft are still available.');
+      } finally { historyPending = false; if (!disposed) setLoading(false); }
     };
-    loadHistory();
+    void loadHistory();
+    if (socket.connected) joined();
+    window.addEventListener('online', loadHistory);
     window.addEventListener('focus', loadHistory);
     return () => {
       disposed = true; controller.abort();
       window.removeEventListener('focus', loadHistory);
+      window.removeEventListener('online', loadHistory);
       socket.off('connect', joined);
       socket.off('disconnect', disconnected);
       socket.off('connect_error', disconnected);
@@ -119,6 +154,27 @@ function HumanChat({ targetUserId }) {
     };
   }, [userId, targetUserId, attempt]);
 
+  useEffect(() => {
+    if (!isAndroid() || !userId || !messages.length || loading) return;
+    const recent = messages.slice(-300).map(message => ({ _id: message.id, senderId: message.senderId,
+      firstName: message.firstName, photoUrl: message.photoUrl, text: message.text, createdAt: message.time?.toISOString() }));
+    while (recent.length && JSON.stringify(recent).length > 450000) recent.shift();
+    const timer = setTimeout(() => { void writeDeviceCache(userId, 'chat:' + targetUserId,
+      { messages: recent, cursor: historyCursor.current, hasEarlier: hasEarlier || messages.length > recent.length, partner: partner ? { _id: partner._id, firstName: partner.firstName, lastName: partner.lastName, photoUrl: partner.photoUrl } : null }); }, 300);
+    return () => clearTimeout(timer);
+  }, [messages, partner, userId, targetUserId, loading, hasEarlier]);
+
+  const loadOlder = async () => {
+    if (olderPending || !navigator.onLine || !messages.length) return;
+    setOlderPending(true);
+    try {
+      const response = await axios.get(BASE_URL + '/chat/' + targetUserId, { params: { sync: '1', before: messages[0].id }, timeout: 20000 });
+      if (!mounted.current) return;
+      const older = (response.data.messages || []).map(message => normalizeMessage(message, userId));
+      setMessages(previous => mergeMessages(older, previous)); setHasEarlier(Boolean(response.data.hasEarlier));
+    } catch { if (mounted.current) setError('Could not load earlier messages. Please try again online.'); }
+    finally { if (mounted.current) setOlderPending(false); }
+  };
   const send = text => {
     const socket = socketRef.current;
     if (!user || !socket?.connected) {
@@ -152,7 +208,9 @@ function HumanChat({ targetUserId }) {
       identity={<Avatar url={partner?.photoUrl} name={partnerName} />} onBack={() => navigate('/connections')}
       composer={<ChatComposer owner={owner} onSend={send} disabled={loading || !userId || sending || uncertain} placeholder={sending ? 'Saving message…' : 'Write a message…'} />}>
       <div ref={scrollRef} onScroll={onScroll} className="dt-chat-scroll">
-        {loading && <p className="dt-human-empty" role="status">Loading conversation…</p>}
+        {hasEarlier && <button type="button" className="dt-text-button" disabled={olderPending || !navigator.onLine} onClick={loadOlder}>{olderPending ? 'Loading...' : 'Load earlier messages'}</button>}
+        {savedView && <p className="dt-chat-cache-note" role="status">Saved messages - Reconnecting when online</p>}
+        {loading && <StartupLoader message="Opening your conversation..." />}
         {!loading && !messages.length && <div className="dt-human-empty"><h2>Start a conversation</h2><p>Say hello with a message, or dictate a draft.</p></div>}
         {error && <div className="dt-reasoning" role="status"><p className="dt-error">{error}</p>
           <button type="button" className="dt-text-button" onClick={() => setAttempt(previous => previous + 1)}>Reconnect and reload history</button></div>}

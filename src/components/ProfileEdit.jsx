@@ -1,8 +1,10 @@
+import { writeDeviceCache } from '../platform/deviceCache';
+import ProfilePhotoUpload from './ProfilePhotoUpload';
 import axios from "../platform/apiClient";
 import { useState } from "react";
 import { BASE_URL } from "../utils/constants";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
+import { useDispatch, useStore } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import UserCard from "./UserCard";
 import ResumeSection from "./ResumeSection";
@@ -10,6 +12,8 @@ import { getApiErrorMessage } from "../utils/apiErrors";
 
 const ProfileEdit = ({ user }) => {
   const dispatch = useDispatch();
+  const store = useStore();
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [firstName, setFirstName] = useState(user.firstName || "");
   const [lastName, setLastName] = useState(user.lastName || "");
   const [age, setAge] = useState(user.age || "");
@@ -22,13 +26,16 @@ const ProfileEdit = ({ user }) => {
   const [leetcodeHandle, setLeetcodeHandle] = useState(user?.leetcodeHandle || "");
 
   const handleUpdate = async () => {
+    if (photoBusy) return;
     try {
       const res = await axios.patch(
         BASE_URL + "/profile/edit",
         { firstName, lastName, age, skills, gender, about, photoUrl, githubHandle, codeforcesHandle, leetcodeHandle },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 30000 }
       );
+      if (store.getState().user?._id !== user._id) return;
       dispatch(addUser(res.data.data));
+      void writeDeviceCache(user._id, 'profile', res.data.data);
       toast.success(res.data.message);
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Could not save your profile. Check your connection and try again."));
@@ -103,15 +110,7 @@ const ProfileEdit = ({ user }) => {
                 onChange={(e) => setAbout(e.target.value)}
               />
             </fieldset>
-            <fieldset className="fieldset">
-              <p>Photo Url</p>
-              <input
-                type="text"
-                className="input"
-                value={photoUrl}
-                onChange={(e) => setPhotoUrl(e.target.value)}
-              />
-            </fieldset>
+            <ProfilePhotoUpload photoUrl={photoUrl} onUploaded={setPhotoUrl} onBusy={setPhotoBusy} />
             <fieldset className="fieldset">
               <p>GitHub Handle</p>
               <input
@@ -145,7 +144,7 @@ const ProfileEdit = ({ user }) => {
             <ResumeSection user={user} />
           </div>
           <div className="flex justify-center card-actions">
-            <button
+            <button disabled={photoBusy}
               className="btn bg-gradient-to-br to-[#020b6ecd] from-[#0F5BC4] mt-8 mb-10 w-full hover:from-[#0818cbd8] transition-colors duration-500"
             >
               Update Profile

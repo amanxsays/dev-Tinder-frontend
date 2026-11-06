@@ -35,8 +35,15 @@ public class SessionPlugin extends Plugin {
             }
             JSObject session = new JSObject();
             session.put("token", token); session.put("userId", userId); session.put("expiresAt", expiry);
-            new SessionStore(getContext()).write("session", session.toString());
-            getActivity().runOnUiThread(() -> {
+            synchronized (SessionStore.class) {
+                SessionStore store = new SessionStore(getContext());
+                String old = store.read("session");
+                String previousOwner = old == null ? store.read("cache-owner") : new JSObject(old).getString("userId");
+                if (previousOwner != null && !userId.equals(previousOwner)) store.removePrefix("cache:");
+                store.write("cache-owner", userId);
+                store.write("session", session.toString());
+            }
+            if (getBridge() != null && getActivity() != null) getActivity().runOnUiThread(() -> {
                 // Successful authentication ends the autofill session. The selected
                 // password manager decides whether to offer saving credentials.
                 try {
@@ -48,7 +55,7 @@ public class SessionPlugin extends Plugin {
         } catch (Exception error) { call.reject("Could not store the session securely.", "SESSION_SAVE_FAILED"); }
     }
     @PluginMethod public void clear(PluginCall call) {
-        try { new SessionStore(getContext()).remove("session"); call.resolve(); }
+        try { synchronized (SessionStore.class) { SessionStore store = new SessionStore(getContext()); store.removePrefix("cache:"); store.remove("cache-owner"); store.remove("session"); call.resolve(); } }
         catch (Exception error) { call.reject("Could not clear the saved session.", "SESSION_CLEAR_FAILED"); }
     }
 }

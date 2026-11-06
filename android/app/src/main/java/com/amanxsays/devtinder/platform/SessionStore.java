@@ -48,6 +48,16 @@ public final class SessionStore {
             + Base64.encodeToString(cipher.doFinal(value.getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
         if (!preferences.edit().putString(name, encoded).commit()) throw new IllegalStateException("Could not save local data");
     }
+    public synchronized void removePrefix(String prefix) {
+        SharedPreferences.Editor editor = preferences.edit();
+        for (String name : preferences.getAll().keySet()) if (name.startsWith(prefix)) editor.remove(name);
+        if (!editor.commit()) throw new IllegalStateException("Could not clear local data");
+    }
+    public synchronized void trimCache(String keep) {
+        java.util.ArrayList<String> keys = new java.util.ArrayList<>();
+        for (String name : preferences.getAll().keySet()) if (name.startsWith("cache:") && name.contains(":chat:") && !name.equals(keep)) keys.add(name);
+        while (keys.size() >= 18) { remove(keys.remove(0)); }
+    }
     public synchronized void remove(String name) {
         if (!preferences.edit().remove(name).commit()) throw new IllegalStateException("Could not clear local data");
     }

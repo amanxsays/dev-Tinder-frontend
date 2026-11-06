@@ -27,3 +27,15 @@ test('network cancellation propagates instead of treating unknown version as cur
   await assert.rejects(checkAndroidUpdate({ getInfo: async () => ({ id: release.applicationId, build: '4' }), signal: controller.signal,
     fetchImpl: async (_url, options) => { assert.equal(options.signal.aborted, true); throw new DOMException('Cancelled', 'AbortError'); } }));
 });
+
+test('offline lease permits recent verified current builds but never a known required update', async () => {
+ const { cachedUpdateDecision } = await import('../src/utils/androidUpdate.js');
+ const now = 100000000;
+ assert.equal(cachedUpdateDecision({ release, checkedAt: now - 1000 }, 5, now).offline, true);
+ assert.equal(cachedUpdateDecision({ release, checkedAt: now - 86400001 }, 5, now), null);
+ assert.equal(cachedUpdateDecision({ release, checkedAt: now + 1 }, 5, now), null);
+ assert.equal(cachedUpdateDecision({ release, checkedAt: 0 }, 4, now).status, 'required');
+ const result = await checkAndroidUpdate({ getInfo: async () => ({ id: release.applicationId, build: '5' }), offline: true, now,
+  storage: { getItem: () => JSON.stringify({ release, checkedAt: now }) }, fetchImpl: async () => assert.fail('offline must not wait on network') });
+ assert.equal(result.status, 'current');
+});
