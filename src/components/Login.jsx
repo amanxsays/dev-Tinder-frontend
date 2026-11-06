@@ -14,7 +14,11 @@ import CountdownTimer from "./OtpCoundown";
 import "../styles/auth.css";
 
 
+const savedEmail = () => { try { return localStorage.getItem('devtinder.remembered-email') || ''; } catch { return ''; } };
 const Login = () => {
+  const [rememberEmail, setRememberEmail] = useState(() => Boolean(savedEmail()));
+  const [authError, setAuthError] = useState('');
+  const chooseMode = signup => { setIsSignUpPage(signup); setAuthError(''); setOtpInput(false); setStartTime(null); };
   const [showPass, setShowPass] = useState(false);
   const [isSignUpPage, setIsSignUpPage] = useState(false);
   const [otpInput,setOtpInput]= useState(false);
@@ -37,7 +41,9 @@ const Login = () => {
   const showAuthError = error => {
     const data = error.response?.data;
     const message = typeof data === 'string' && !data.trim().startsWith('<') ? data : data?.message;
-    toast.error(message || 'The server is starting or unavailable. Please try again.');
+    const hint = error.response?.status === 401 ? 'Email or password not recognised. New here? Choose Create account above.' : message || 'The server is starting or unavailable. Please try again.';
+    setAuthError(hint);
+    toast.error(hint);
   };
   const saveSession = async data => {
     if (isAndroid()) {
@@ -45,6 +51,10 @@ const Login = () => {
       if (previous.userId && previous.userId !== data.data?._id) await disableNotifications({ awaitRemote: false });
     }
     await acceptNativeSession(data);
+    try {
+      if (rememberEmail) localStorage.setItem('devtinder.remembered-email', emailId.current.value.trim());
+      else localStorage.removeItem('devtinder.remembered-email');
+    } catch { /* Password manager and login remain usable without local storage. */ }
   };
 
   const firstName = useRef("");
@@ -139,7 +149,7 @@ const Login = () => {
       </div>
       <div className="dt-auth-content">
         <section className="dt-auth-card card w-96 card-lg" aria-labelledby="dt-auth-heading">
-          <form className="card-body" aria-describedby="dt-auth-description" onSubmit={event => {
+          <form autoComplete="on" className="card-body" aria-describedby="dt-auth-description" onSubmit={event => {
             event.preventDefault();
             if (isSignUpPage) { if (otpInput) void handleSignUp(); else void handleOtp(); }
             else void handleLogin();
@@ -148,6 +158,12 @@ const Login = () => {
               <h1 id="dt-auth-heading">{isSignUpPage ? 'Create your account' : 'Welcome back'}</h1>
               <p id="dt-auth-description">{isSignUpPage ? 'Meet developers and build your network.' : 'Sign in to your developer network.'}</p>
             </div>
+            <div className="dt-auth-modes" role="group" aria-label="Choose account action">
+              <button type="button" aria-pressed={!isSignUpPage} disabled={Boolean(pendingAction)} onClick={() => chooseMode(false)}>Log in</button>
+              <button type="button" aria-pressed={isSignUpPage} disabled={Boolean(pendingAction)} onClick={() => chooseMode(true)}>Create account</button>
+            </div>
+            <p className="dt-auth-mode-hint">{isSignUpPage ? 'Already have an account? Choose Log in.' : 'First time here? Choose Create account.'}</p>
+            {authError && <p className="dt-auth-inline-error" role="alert">{authError}</p>}
             <div className="dt-auth-name-fields" hidden={!isSignUpPage}>
               <div className="dt-auth-field">
                 <label htmlFor="dt-first-name"><FiUser aria-hidden="true" />First name</label>
@@ -160,12 +176,12 @@ const Login = () => {
             </div>
             <div className="dt-auth-field">
               <label htmlFor="dt-email"><FiMail aria-hidden="true" />Email address</label>
-              <input id="dt-email" name="username" ref={emailId} type="email" inputMode="email" enterKeyHint="next" autoComplete="username" autoCapitalize="none" spellCheck={false} className="input" placeholder="Email Id" disabled={Boolean(pendingAction)} />
+              <input id="dt-email" name="username" defaultValue={savedEmail()} ref={emailId} type="email" inputMode="email" enterKeyHint="next" autoComplete="username" autoCapitalize="none" spellCheck={false} className="input" placeholder="Email Id" readOnly={Boolean(pendingAction)} />
             </div>
             <div className="dt-auth-field">
               <label htmlFor="dt-password"><FiLock aria-hidden="true" />Password</label>
               <div className="dt-auth-password">
-                <input id="dt-password" name="password" ref={password} type={showPass ? 'text' : 'password'} enterKeyHint={isSignUpPage && otpInput ? 'next' : 'go'} autoComplete={isSignUpPage ? 'new-password' : 'current-password'} className="input" placeholder="Password" disabled={Boolean(pendingAction)} />
+                <input id="dt-password" name="password" ref={password} type={showPass ? 'text' : 'password'} enterKeyHint={isSignUpPage && otpInput ? 'next' : 'go'} autoComplete={isSignUpPage ? 'new-password' : 'current-password'} className="input" placeholder="Password" readOnly={Boolean(pendingAction)} />
                 <button type="button" className="dt-password-toggle" aria-label={showPass ? 'Hide password' : 'Show password'} aria-pressed={showPass} onClick={() => setShowPass(!showPass)}>
                   {showPass ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
                 </button>
@@ -176,12 +192,19 @@ const Login = () => {
               <input id="dt-otp" name="one-time-code" ref={otp} type="text" inputMode="numeric" enterKeyHint="go" autoComplete="one-time-code" className="input" placeholder="otp" disabled={Boolean(pendingAction)} />
               {startTime !== null && <CountdownTimer startTime={startTime} onResend={handleOtp} />}
             </div>
+            {!isSignUpPage && <div className="dt-auth-remember">
+              <label><input type="checkbox" checked={rememberEmail} onChange={event => {
+                setRememberEmail(event.target.checked);
+                if (!event.target.checked) { try { localStorage.removeItem('devtinder.remembered-email'); } catch { /* Optional preference. */ } }
+              }} /> Remember my email</label>
+              <p>Your password manager can save and autofill your password. DevTinder never saves it on this device.</p>
+            </div>}
             <div className="dt-auth-actions">
               <button type="submit" disabled={Boolean(pendingAction)} className="btn dt-auth-submit">
                 {pendingAction ? pendingAction + '…' : isSignUpPage ? (otpInput ? 'Verify & Sign Up' : 'Send Otp') : 'Login'}
               </button>
               {pendingAction && <p className="dt-auth-wait" role="status">The server may take a moment to wake up. Please keep this page open.</p>}
-              <button type="button" disabled={Boolean(pendingAction)} className="dt-auth-switch" onClick={() => setIsSignUpPage(!isSignUpPage)}>
+              <button type="button" disabled={Boolean(pendingAction)} className="dt-auth-switch" onClick={() => chooseMode(!isSignUpPage)}>
                 {isSignUpPage ? <>Already registered? <span>Log in</span></> : <>New to DevTinder? <span>Sign up</span></>}
               </button>
             </div>

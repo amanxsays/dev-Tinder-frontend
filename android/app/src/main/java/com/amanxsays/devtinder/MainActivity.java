@@ -39,6 +39,9 @@ public class MainActivity extends BridgeActivity {
             getWindow(), getWindow().getDecorView());
         bars.setAppearanceLightStatusBars(false);
         bars.setAppearanceLightNavigationBars(false);
+        if (getBridge() != null) {
+            getBridge().getWebView().setImportantForAutofill(android.view.View.IMPORTANT_FOR_AUTOFILL_YES);
+        }
         boolean debug = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         android.webkit.WebView.setWebContentsDebuggingEnabled(debug);
         if (debug && getBridge() != null) {

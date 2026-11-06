@@ -298,3 +298,17 @@
   .dt-compose-form textarea { min-height: 44px; max-height: 120px; }
   .dt-mic-button { width: 44px; height: 44px; font-size: 20px; }
 }
+
+/* Compact conversation layout; the launcher never covers an active chat. */
+.dt-chat-shell .dt-chat-title { text-align: left; }
+.dt-chat-shell .dt-chat-header { gap: 12px; padding-inline: 18px; }
+.dt-human-chat .dt-chat-scroll { padding: 20px max(14px, calc((100% - 800px)/2)); background: radial-gradient(ellipse at top, #16232f66, transparent 70%), #0c151d; }
+.dt-human-chat .dt-message-row { margin-bottom: 10px; }
+.dt-human-chat .dt-message-content { max-width: min(84%, 580px); }
+.dt-human-chat .dt-bubble { padding: 10px 13px 7px; border-radius: 4px 14px 14px; background: #202e3a; color: #ecf2f7; border-color: #ffffff0a; box-shadow: 0 1px 2px #0003; line-height: 1.5; }
+.dt-human-chat .dt-bubble--own { background: #16466a; border-radius: 14px 4px 14px 14px; color: #f1f7fc; }
+.dt-message-text { white-space: pre-wrap; }
+.dt-bubble-time { display: block; text-align: right; color: #b2c1cd; font-size: 10px; margin-top: 4px; line-height: 1.2; }
+.chat-orb--launcher { animation: dt-orb-levitate 5s ease-in-out infinite; will-change: transform; }
+@keyframes dt-orb-levitate { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@media (prefers-reduced-motion: reduce) { .chat-orb--launcher { animation: none; will-change: auto; } }

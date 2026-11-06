@@ -48,7 +48,7 @@ export default function NotificationSettings() {
     {isAndroid() ? <>
       <div className="dt-notification-row">
         <FiBell aria-hidden="true" />
-        <div><h2>Messages &amp; requests</h2><p>Stay updated. Message previews stay private.</p></div>
+        <div><h2>Messages &amp; requests</h2><p>Sender and message previews appear in notifications. Lock-screen visibility follows your Android settings.</p></div>
         {!blocked && <button type="button" className="dt-notification-switch" role="switch" aria-label="Message and connection-request notifications" aria-checked={enabled} disabled={busy || !state} onClick={() => change(!enabled)}><span /></button>}
       </div>
       {blocked && <><p>Notifications are turned off in your phone settings.</p><button type="button" disabled={busy} onClick={() => change(true)}>Open Android settings</button></>}
