@@ -8,7 +8,7 @@ This repository is the frontend. The Express API and Spring Boot integration ser
 
 The same frontend now includes a Capacitor Android project in `android/`, with native secure sessions, dictation, Read aloud, private PDF preview, and Firebase notification bridges. Web builds still produce `dist/`; Android bundles produce `dist-android/`. APK updates are separate from Netlify deployments.
 
-Android uses the system notification permission dialog once after sign-in, remembers denial and explicit opt-outs, and offers a compact notification switch in Settings. The website footer is hidden inside Android. Version 1.0.2 (code 3) adds native status-bar/keyboard spacing, contained resume actions, profile navigation polish and concise swipe guidance. Install the latest APK over your existing app; website updates alone do not update an installed app.
+Android uses the system notification permission dialog once after sign-in, remembers denial and explicit opt-outs, and offers a compact notification switch in Settings. The website footer is hidden inside Android. Version 1.0.3 (code 4) adds Devi branding, compact messaging, sender/message notification previews, clearer login/signup choices, remembered email/password-manager support and corrected OTP handling. Install the latest APK over your existing app; website updates alone do not update an installed app.
 
 See [Android development](docs/android/README.md), [Firebase configuration](docs/android/FIREBASE.md), and [release gates](docs/android/RELEASE.md). Firebase credentials, release signing, deployed mobile APIs, and real-device validation are prerequisites for distribution; adding source code does not configure or publish those services.
 

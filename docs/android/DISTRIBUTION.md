@@ -6,7 +6,19 @@ The download route has its own static layout outside the application lifecycle. 
 
 Share `https://devtinderfront.netlify.app/download` directly with phone or desktop users. They do not need an account to view the page or download the APK. An account is required only when signing into the installed app.
 
-## Current release: 1.0.2
+## Current release: 1.0.3
+
+- Package: `com.amanxsays.devtinder`; version name `1.0.3`, version code `4`.
+- Source: `23bd9da3df10687b740b0cd0670d4a19a6e59ac5`.
+- Release tag: `android-v1.0.3`; asset `DevTinder-1.0.3.apk`, 5,689,409 bytes.
+- SHA-256: `b4129b1e390e2eec190498d6343d14372d5726248b68bffc873ad5dbb8a53a24`.
+- Signing certificate unchanged: `aab1071e2f3d8c0e454946bdd598d99d91e3b669f892e9000a6f0ccd3e113ed0`.
+- Primary: `https://devtinderfront.netlify.app/downloads/DevTinder-1.0.3.apk`.
+- Alternative: `https://github.com/amanxsays/dev-Tinder-frontend/releases/download/android-v1.0.3/DevTinder-1.0.3.apk`.
+
+See [1.0.3 changes and phone checks](1.0.3-DEVI.md). Signature, production endpoint, Devi and OTP bundle markers were inspected. Install over the existing app without uninstalling. Physical-device upgrade, password-manager behavior and notification previews remain for final testing. Current old Netlify paths redirect to 1.0.3; historical GitHub releases remain available.
+
+## Previous release: 1.0.2
 
 - Package: `com.amanxsays.devtinder`; version name `1.0.2`, version code `3`.
 - Source: `b6d2784c795be291712aab1beafe3bf18cb9e033`.

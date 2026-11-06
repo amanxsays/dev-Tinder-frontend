@@ -6,7 +6,7 @@ import { isAndroid } from '../platform/platform';
 import '../styles/site.css';
 import '../styles/download.css';
 
-const releaseUrl = 'https://github.com/amanxsays/dev-Tinder-frontend/releases/tag/android-v1.0.2';
+const releaseUrl = 'https://github.com/amanxsays/dev-Tinder-frontend/releases/tag/android-v1.0.3';
 
 export default function DownloadAndroid() {
   return <div className="dt-app-frame">
@@ -26,7 +26,7 @@ export default function DownloadAndroid() {
         <h1 id="android-title">Your developer network.<br />Now in your pocket.</h1>
         <p>Connect with developers, chat with your network, and take your AI recruiter with you.</p>
         <a className="dt-download-primary" href={androidRelease.downloadPath} download={androidRelease.filename}><FiDownload aria-hidden="true" />Download Android APK</a>
-        <p className="dt-download-meta">Version 1.0.2 · 5.7 MB · Android 8.0 or later</p>
+        <p className="dt-download-meta">Version 1.0.3 · 5.7 MB · Android 8.0 or later</p>
         <Link className="dt-download-web" to="/">Continue on the web <FiArrowUpRight aria-hidden="true" /></Link>
       </div>
       <div className="dt-download-card">
