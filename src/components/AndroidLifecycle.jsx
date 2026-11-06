@@ -81,6 +81,9 @@ export default function AndroidLifecycle() {
       disposed = true;
       handles.forEach(handle => void handle.remove());
       releaseLinks();
+      state.current.runtime.interrupt();
+      void closeNativePdf().catch(() => {});
+      void NativeNotifications.setContext({ active: false, targetUserId: '' }).catch(() => {});
       window.removeEventListener('devtinder:session-expired', expired);
       window.removeEventListener('online', online);
     };

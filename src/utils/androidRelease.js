@@ -1,4 +1,7 @@
 export const androidRelease = Object.freeze({
+  applicationId: 'com.amanxsays.devtinder',
+  versionCode: 4,
+  versionName: '1.0.3',
   filename: 'DevTinder-1.0.3.apk',
   bytes: 5689409,
   sha256: 'b4129b1e390e2eec190498d6343d14372d5726248b68bffc873ad5dbb8a53a24',

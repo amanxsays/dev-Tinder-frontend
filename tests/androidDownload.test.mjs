@@ -49,3 +49,15 @@ test('release host failure fails the build instead of publishing an error page a
     fetchImpl: async () => new Response('<html>Unavailable</html>', { status: 503 }) }), /HTTP 503/);
   await assert.rejects(access(join(outputDir, 'fixture.apk')));
 });
+
+test('version manifest is emitted only with a verified matching APK', async t => {
+  const outputDir = join(await output(t), 'downloads');
+  const metadata = { ...release, applicationId: 'com.amanxsays.devtinder', versionCode: 5, versionName: '1.0.4',
+    downloadPath: '/downloads/DevTinder-1.0.4.apk' };
+  await prepareAndroidDownload({ outputDir, release: metadata, fetchImpl: async () => new Response(payload) });
+  const manifest = JSON.parse(await readFile(join(outputDir, '../android-version.json'), 'utf8'));
+  assert.equal(manifest.versionCode, 5); assert.equal(manifest.sha256, release.sha256);
+  const rejectedDir = join(await output(t), 'downloads');
+  await assert.rejects(prepareAndroidDownload({ outputDir: rejectedDir, release: metadata, fetchImpl: async () => new Response('wrong') }));
+  await assert.rejects(access(join(rejectedDir, '../android-version.json')));
+});

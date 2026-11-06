@@ -31,6 +31,12 @@ export async function prepareAndroidDownload({
     await writeFile(temporary, bytes);
     await rename(temporary, destination);
     await writeFile(join(outputDir, 'SHA256SUMS.txt'), `${hash}  ${release.filename}\n`);
+    if (release.versionCode) {
+      const { validateAndroidRelease } = await import('../src/utils/androidUpdate.js');
+      const manifest = validateAndroidRelease({ ...release, apkUrl: 'https://devtinderfront.netlify.app' + release.downloadPath });
+      // Publish only after this build verified and staged the matching APK.
+      await writeFile(join(outputDir, '../android-version.json'), JSON.stringify(manifest) + '\n');
+    }
   } finally {
     await rm(temporary, { force: true });
   }
