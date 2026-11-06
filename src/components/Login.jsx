@@ -121,14 +121,15 @@ const Login = () => {
         { withCredentials: true, timeout: 180000 }
       )
       if (typeof res.data?.message !== 'string') throw new Error('Unexpected OTP response');
-      setStartTime(Date.now());
+      setAuthError('');
+      setStartTime(Date.parse(res.data.sentAt) || Date.now());
       setOtpInput(true);
       toast.success(res.data.message, {
           autoClose: 10000, // 10 seconds
       });
     } catch (err) {
-      if (err.response && err.response.status < 500) {
-        setStartTime(0);
+      if (err.response?.data?.code === 'OTP_ACTIVE') {
+        setStartTime(Date.parse(err.response.data.sentAt) || Date.now());
         setOtpInput(true);
       }
       showAuthError(err);
@@ -176,7 +177,10 @@ const Login = () => {
             </div>
             <div className="dt-auth-field">
               <label htmlFor="dt-email"><FiMail aria-hidden="true" />Email address</label>
-              <input id="dt-email" name="username" defaultValue={savedEmail()} ref={emailId} type="email" inputMode="email" enterKeyHint="next" autoComplete="username" autoCapitalize="none" spellCheck={false} className="input" placeholder="Email Id" readOnly={Boolean(pendingAction)} />
+              <input id="dt-email" name="username" defaultValue={savedEmail()} ref={emailId} onChange={() => {
+                if (otpInput) { setOtpInput(false); setStartTime(null); if (otp.current) otp.current.value = ''; }
+                setAuthError('');
+              }} type="email" inputMode="email" enterKeyHint="next" autoComplete="username" autoCapitalize="none" spellCheck={false} className="input" placeholder="Email Id" readOnly={Boolean(pendingAction)} />
             </div>
             <div className="dt-auth-field">
               <label htmlFor="dt-password"><FiLock aria-hidden="true" />Password</label>
@@ -189,8 +193,8 @@ const Login = () => {
             </div>
             <div className="dt-auth-field" hidden={!isSignUpPage || !otpInput}>
               <label htmlFor="dt-otp"><FiKey aria-hidden="true" />Verification code</label>
-              <input id="dt-otp" name="one-time-code" ref={otp} type="text" inputMode="numeric" enterKeyHint="go" autoComplete="one-time-code" className="input" placeholder="otp" disabled={Boolean(pendingAction)} />
-              {startTime !== null && <CountdownTimer startTime={startTime} onResend={handleOtp} />}
+              <input id="dt-otp" name="one-time-code" ref={otp} type="text" inputMode="numeric" enterKeyHint="go" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" className="input" placeholder="6-digit code" disabled={Boolean(pendingAction)} />
+              {startTime !== null && <CountdownTimer startTime={startTime} onResend={handleOtp} disabled={Boolean(pendingAction)} />}
             </div>
             {!isSignUpPage && <div className="dt-auth-remember">
               <label><input type="checkbox" checked={rememberEmail} onChange={event => {
